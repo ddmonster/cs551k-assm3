@@ -1,38 +1,28 @@
 /* Initial beliefs and rules */
 random_dir(DirList,RandomNumber,Dir) :- (RandomNumber <= 0.25 & .nth(0,DirList,Dir)) | (RandomNumber <= 0.5 & .nth(1,DirList,Dir)) | (RandomNumber <= 0.75 & .nth(2,DirList,Dir)) | (.nth(3,DirList,Dir)).
-
 currentPosition(0,0).
 previousPosition(0,0).
-emptyRow([]).
-
-
 /* Initial goals */
 
 !start.
 
+
+/*    Percepts updates     */
++thing(X,Y, dispenser, T)[source(percept)] <- !updateDispensers(X,Y,T).
++obstacle(X,Y)[source(percept)] <- !updateObstacles(X,Y).
++goal(X,Y)[source(percept)] <- !updateGoals(X,Y).
+
 /* Plans */
+
 +!start : true <- 
 	.print("hello massim world.").
-/*
-+!start : true <- 
-	.print("hello massim world.");
-	//at start, initiate an empty map - assuming a size of 64x64 max
-	.map.create(worldMap);
-	.queue.create(emptyRow);
-	//initiate an empty row
-	for(.range(I,-64,64)){
-		.queue.add(emptyRow, 0);
-	};
-	for(.range(I,-64,64)){
-		.map.put(worldMap, I, emptyRow);
-	};
-	.print("empty map initiated").
-*/
 
 +step(X) : true <-
 	.print("Received step percept.").
 	//check if last move was successful
 	!revertPositionIfUnsuccessful.
+
+
 	
 +actionID(X) : true <- 
 	.print("Determining my action");
@@ -40,10 +30,10 @@ emptyRow([]).
 //	skip.
 
 +!move_random : .random(RandomNumber) & random_dir([n,s,e,w],RandomNumber,Dir) &currentPosition(X,Y)
-<-	!moveAndUpdate(Dir).
+<-	!moveAndUpdate(Dir, X, Y).
 
 //plan to use for moving, which includes positional updates.
-+!moveAndUpdate(Dir): true <-
++!moveAndUpdate(Dir, X, Y): true <-
 	move(Dir);!updatePosition(Dir); -previousPosition(_,_); +previousPosition(X,Y).
 
 // update position after submitting the "move" action.
@@ -63,5 +53,12 @@ emptyRow([]).
 //otherwise OK, no action needed.
 +!revertPositionIfUnsuccessful: true <- true.
 
++!updateDispensers(X,Y,T): currentPosition(X1,Y1) <-
+	+dispenserL(X+X1, Y+Y1, T).
 
++!updateObstacles(X,Y): currentPosition(X1,Y1) <-
+	+obstacleL(X+ X1, Y+Y1).
+
++!updateGoals(X,Y): currentPosition(X1,Y1) <-
+	+goalL(X + X1, Y+Y1).
 
