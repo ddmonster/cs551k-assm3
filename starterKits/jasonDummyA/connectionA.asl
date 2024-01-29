@@ -57,7 +57,7 @@ previousPosition(0,0).
 +!updateDispensers(X,Y,T): currentPosition(X1,Y1) <-
 	+coordinate(X+X1, Y+Y1, dispenser, T).
 
-+!updateBlocks(X,Y,T): currentPosition(X1,Y1) <- true
++!updateBlocks(X,Y,T): currentPosition(X1,Y1) <- true.
 	//TODO - blocks are not constant in the world
 
 +!updateObstacles(X,Y): currentPosition(X1,Y1) <-
