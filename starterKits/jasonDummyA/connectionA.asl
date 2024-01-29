@@ -9,6 +9,7 @@ previousPosition(0,0).
 
 /*    Percepts updates     */
 +thing(X,Y, dispenser, T)[source(percept)] <- !updateDispensers(X,Y,T).
++thing(X,Y, block, T)[source(percept)] <- !updateBlocks(X,Y,T).
 +obstacle(X,Y)[source(percept)] <- !updateObstacles(X,Y).
 +goal(X,Y)[source(percept)] <- !updateGoals(X,Y).
 
@@ -54,11 +55,14 @@ previousPosition(0,0).
 +!revertPositionIfUnsuccessful: true <- true.
 
 +!updateDispensers(X,Y,T): currentPosition(X1,Y1) <-
-	+dispenserL(X+X1, Y+Y1, T).
+	+coordinate(X+X1, Y+Y1, dispenser, T).
+
++!updateBlocks(X,Y,T): currentPosition(X1,Y1) <- true
+	//TODO - blocks are not constant in the world
 
 +!updateObstacles(X,Y): currentPosition(X1,Y1) <-
-	+obstacleL(X+ X1, Y+Y1).
+	+coordinate(X+ X1, Y+Y1, obstacle, none).
 
 +!updateGoals(X,Y): currentPosition(X1,Y1) <-
-	+goalL(X + X1, Y+Y1).
+	+coordinate(X + X1, Y+Y1, goal, none).
 
