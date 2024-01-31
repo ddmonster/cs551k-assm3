@@ -115,12 +115,18 @@ public class EISAdapter extends Environment implements AgentListener {
 
         if (action.getFunctor().equals("report")) {
             // Extract the beliefs list
-            ListTerm things = (ListTerm) action.getTerm(0);
-            ListTerm obstacles = (ListTerm) action.getTerm(1);
-            ListTerm goals = (ListTerm) action.getTerm(2);
+            try{
+                ListTerm things = (ListTerm) action.getTerm(0);
+                ListTerm obstacles = (ListTerm) action.getTerm(1);
+                ListTerm goals = (ListTerm) action.getTerm(2);
+                NumberTerm currX = (NumberTerm) action.getTerm(3);
+                NumberTerm currY = (NumberTerm) action.getTerm(4);
+                agents.get(agName).updateMap(things, obstacles, goals, currX, currY);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
             
-            agents.get(agName).updateMap(things, obstacles, goals);
-
             return true;
         }
 

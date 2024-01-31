@@ -26,16 +26,18 @@ public class Agent {
     private String name;
     private String[][] map;
     private int[] position;
-    private final int MAP_WIDTH = 60;
-    private final int MAP_HEIGHT = 60;
+    private final int MAP_WIDTH = 64;
+    private final int MAP_HEIGHT = 64;
+    private int updates;
 
 
     public Agent(String name) {
         this.name = name;
         this.position = new int[2];
-        this.position[0] = 0;
-        this.position[1] = 0;
-        this.map = new String[MAP_WIDTH][MAP_HEIGHT];
+        this.position[0] = 64;  //assuming the map is at most 64x64, this ensures that no index of our map becomes lower than 0
+        this.position[1] = 64;
+        this.updates = 0;   //keep track of when to print the map
+        this.map = new String[MAP_WIDTH*2][MAP_HEIGHT*2];
         for (int i = 0; i < MAP_WIDTH; i++) {
             Arrays.fill(map[i], "unknown");
         }
@@ -45,31 +47,80 @@ public class Agent {
         this.position[1] = y;
     }
 
-    public void updateMap(ListTerm things, ListTerm obstacles, ListTerm goals) {
+    public void updateMap(ListTerm things, ListTerm obstacles, ListTerm goals, NumberTerm currX, NumberTerm currY) {
         try{
-        for (Term t : things) {
-            Structure s = (Structure) t;
-            String type = s.getTerm(2).toString();
-            int x =  (int) ((NumberTerm) s.getTerm(0)).solve() - this.position[0];
-            int y = (int) ((NumberTerm) s.getTerm(1)).solve() - this.position[1];
-            updateMapTile(x, y, type);
+            updatePosition((int)currX.solve(), (int)currY.solve());
+            for (Term t : things) {
+                Structure s = (Structure) t;
+                String type = s.getTerm(2).toString();
+                int x =  (int) -((NumberTerm) s.getTerm(0)).solve() + this.position[0];
+                int y = (int) -((NumberTerm) s.getTerm(1)).solve() + this.position[1];
+                updateMapTile(x, y, type);
+            }
+            for (Term t : obstacles) {
+                Structure s = (Structure) t;
+                String type = s.getFunctor().toString();
+                int x =  (int) -((NumberTerm) s.getTerm(0)).solve() + this.position[0];
+                int y = (int) -((NumberTerm) s.getTerm(1)).solve() + this.position[1];
+                updateMapTile(x, y, type);
+            }
+            for (Term t : goals) {
+                Structure s = (Structure) t;
+                String type = s.getFunctor().toString();
+                int x =  (int) -((NumberTerm) s.getTerm(0)).solve() + this.position[0];
+                int y = (int) -((NumberTerm) s.getTerm(1)).solve() + this.position[1];
+                updateMapTile(x, y, type);
+            }
+        //printPosition();
+        this.updates+=1;
+        if(this.updates % 20 == 0 && this.name.equals("connectionA1")){
+            printMap();
         }
-        for (Term t : obstacles) {
-            Structure s = (Structure) t;
-            String type = s.getFunctor().toString();
-            int x =  (int) ((NumberTerm) s.getTerm(0)).solve() - this.position[0];
-            int y = (int) ((NumberTerm) s.getTerm(1)).solve() - this.position[1];
-            updateMapTile(x, y, type);
+
+        } catch (Exception e) {
+            System.out.println("Error updating map:");
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        System.out.println("Error updating map");
-    }
 
     }
-
 
     public void updateMapTile(int x, int y, String tileType) {
         map[x][y] = tileType;
+    }
+
+    public void printPosition(){
+        System.out.println(name + "position - X: " +position[0] + "Y: "+ position[1]);  
+    }
+    public void printMap(){
+         for (int i = 0; i < map.length; i++){
+            System.out.print("-");
+         }
+         System.out.println();
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                if(i == position[0] && j == position[1]){
+                    System.out.print("A");
+                }
+                else if(map[i][j].equals("unknown")){
+                   System.out.print("."); 
+                }
+                else if(map[i][j].equals("dispenser")){
+                    System.out.print("D");
+                }
+                else if(map[i][j].equals("goal")){
+                    System.out.print("G");
+                }
+                else if(map[i][j].equals("obstacle")){
+                    System.out.print("O");
+                }
+            }
+            System.out.println();
+        }
+        for (int i = 0; i < map.length; i++){
+            System.out.print("-");
+         }
+         System.out.println();
+        
     }
 
 }
