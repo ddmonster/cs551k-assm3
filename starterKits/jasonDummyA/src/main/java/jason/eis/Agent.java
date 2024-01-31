@@ -52,7 +52,7 @@ public class Agent {
             updatePosition((int)currX.solve(), (int)currY.solve());
             for (Term t : things) {
                 Structure s = (Structure) t;
-                String type = s.getTerm(2).toString() + s.getTerm(3).toString();
+                String type = s.getTerm(2).toString() + s.getTerm(3).toString(); //dispenserb0
                 int x =  (int) ((NumberTerm) s.getTerm(0)).solve() + this.position[0];
                 int y = (int) ((NumberTerm) s.getTerm(1)).solve() + this.position[1];
                 updateMapTile(x, y, type);
