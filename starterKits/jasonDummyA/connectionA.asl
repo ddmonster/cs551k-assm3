@@ -22,8 +22,9 @@ previousPosition(64,64).
 	//.print("hello massim world.").
 	true.
 
+@step[atomic]	//atomic because currentPosition(X,Y) can confuse the agent as step(X) and actionID(X) can have interleaved execution
 +step(Xstep) : true <-
-	//.print("Received step percept.");
+	.print("Received step percept.");
 	//check if last move was successful
 	!revertPositionIfUnsuccessful;
 	//update the internal maps with percepts
@@ -32,7 +33,7 @@ previousPosition(64,64).
 
 	
 +actionID(Xactionid) : true <- 
-	//.print("Determining my action");
+	.print("Determining my action");
 	!move_random.
 //	skip.
 
@@ -45,7 +46,7 @@ previousPosition(64,64).
 	move(Dir);!updatePosition(Dir); -previousPosition(_,_); +previousPosition(X,Y).
 
 // update position after submitting the "move" action.
-//if move action is unsuccessful, this will be reverted after percepting NEEDS MORE TESTING
+//if move action is unsuccessful, this will be reverted after percepting 
 @updatePosition[atomic]
 +!updatePosition(V) : currentPosition(X,Y) & V = n <-
 	-currentPosition(X,Y);+currentPosition(X, Y - 1).

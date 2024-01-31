@@ -52,7 +52,7 @@ public class Agent {
             updatePosition((int)currX.solve(), (int)currY.solve());
             for (Term t : things) {
                 Structure s = (Structure) t;
-                String type = s.getTerm(2).toString();
+                String type = s.getTerm(2).toString() + s.getTerm(3).toString();
                 int x =  (int) ((NumberTerm) s.getTerm(0)).solve() + this.position[0];
                 int y = (int) ((NumberTerm) s.getTerm(1)).solve() + this.position[1];
                 updateMapTile(x, y, type);
@@ -71,12 +71,15 @@ public class Agent {
                 int y = (int) ((NumberTerm) s.getTerm(1)).solve() + this.position[1];
                 updateMapTile(x, y, type);
             }
+        
         //printPosition();
+        /*
         this.updates+=1;
         if(this.updates % 20 == 0 && this.name.equals("connectionA1")){
             printMap();
         }
-
+        */
+        
         } catch (Exception e) {
             System.out.println("Error updating map:");
             e.printStackTrace();
@@ -96,21 +99,24 @@ public class Agent {
             System.out.print("-");
          }
          System.out.println();
-        for (int i = map.length -1; i > 0; i--) {
+        for (int i = 0; i <map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
                 if(i == position[0] && j == position[1]){
                     System.out.print("A");
                 }
-                else if(map[i][j].equals("unknown")){
+                else if(map[j][i].equals("unknown")){
                    System.out.print(".."); 
                 }
-                else if(map[i][j].equals("dispenser")){
-                    System.out.print("D");
+                else if(map[j][i].equals("dispenserb0")){
+                    System.out.print("0");
                 }
-                else if(map[i][j].equals("goal")){
+                else if(map[j][i].equals("dispenserb1")){
+                    System.out.print("1");
+                }
+                else if(map[j][i].equals("goal")){
                     System.out.print("G");
                 }
-                else if(map[i][j].equals("obstacle")){
+                else if(map[j][i].equals("obstacle")){
                     System.out.print("O");
                 }
             }
