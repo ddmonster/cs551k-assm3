@@ -13,6 +13,8 @@ previousPosition(0,0).
 +obstacle(X,Y)[source(percept)] <- !updateObstacles(X,Y).
 +goal(X,Y)[source(percept)] <- !updateGoals(X,Y).
 
+
+
 /* Plans */
 
 +!start : true <- 
@@ -31,7 +33,8 @@ previousPosition(0,0).
 //	skip.
 
 +!move_random : .random(RandomNumber) & random_dir([n,s,e,w],RandomNumber,Dir) &currentPosition(X,Y)
-<-	!moveAndUpdate(Dir, X, Y).
+<-	!reportBeliefs;
+	!moveAndUpdate(Dir, X, Y).
 
 //plan to use for moving, which includes positional updates.
 +!moveAndUpdate(Dir, X, Y): true <-
@@ -66,3 +69,11 @@ previousPosition(0,0).
 +!updateGoals(X,Y): currentPosition(X1,Y1) <-
 	+coordinate(X + X1, Y+Y1, goal, none).
 
+
++!reportBeliefs : true <- 
+    .findall(thing(A,B,C,D),thing(A,B,C,D), Things);
+	.findall(obstacle(A,B),obstacle(A,B), Obstacles);
+	.findall(goal(A,B),goal(A,B), Goals);
+	report(Things, Obstacles, Goals).
+	
+    

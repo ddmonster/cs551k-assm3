@@ -1,5 +1,6 @@
 package jason.eis;
 
+import jason.eis.Agent;
 import eis.AgentListener;
 import eis.EnvironmentInterfaceStandard;
 import eis.EnvironmentListener;
@@ -28,10 +29,13 @@ public class EISAdapter extends Environment implements AgentListener {
 
     private Logger logger = Logger.getLogger("EISAdapter." + EISAdapter.class.getName());
 
+    private Map<String, Agent> agents;
+
     private EnvironmentInterfaceStandard ei;
 
     public EISAdapter() {
         super(20);
+        agents = new HashMap<>();
     }
 
     @Override
@@ -56,6 +60,8 @@ public class EISAdapter extends Environment implements AgentListener {
 
         for(String e: ei.getEntities()) {
             System.out.println("Register agent " + e);
+
+            agents.put(e, new Agent(e));   // Agent Objects
 
             try {
                 ei.registerAgent(e);
@@ -107,6 +113,18 @@ public class EISAdapter extends Environment implements AgentListener {
     @Override
     public boolean executeAction(String agName, Structure action) {
 
+        if (action.getFunctor().equals("report")) {
+            // Extract the beliefs list
+            ListTerm things = (ListTerm) action.getTerm(0);
+            ListTerm obstacles = (ListTerm) action.getTerm(1);
+            ListTerm goals = (ListTerm) action.getTerm(2);
+            
+            agents.get(agName).updateMap(things, obstacles, goals);
+
+            return true;
+        }
+
+
         if (ei == null) {
             logger.warning("There is no environment loaded! Ignoring action " + action);
             return false;
@@ -133,6 +151,13 @@ public class EISAdapter extends Environment implements AgentListener {
             }
         }
         super.stop();
+    }
+
+    private void handleAgentBeliefs(String agentName, ListTerm beliefs) {
+        System.out.println("Beliefs of agent " + agentName + ":");
+        for (Term belief : beliefs) {
+            System.out.println(" - " + belief);
+        }
     }
 
     private static Literal perceptToLiteral(Percept per) throws JasonException {
