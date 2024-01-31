@@ -53,22 +53,22 @@ public class Agent {
             for (Term t : things) {
                 Structure s = (Structure) t;
                 String type = s.getTerm(2).toString();
-                int x =  (int) -((NumberTerm) s.getTerm(0)).solve() + this.position[0];
-                int y = (int) -((NumberTerm) s.getTerm(1)).solve() + this.position[1];
+                int x =  (int) ((NumberTerm) s.getTerm(0)).solve() + this.position[0];
+                int y = (int) ((NumberTerm) s.getTerm(1)).solve() + this.position[1];
                 updateMapTile(x, y, type);
             }
             for (Term t : obstacles) {
                 Structure s = (Structure) t;
                 String type = s.getFunctor().toString();
-                int x =  (int) -((NumberTerm) s.getTerm(0)).solve() + this.position[0];
-                int y = (int) -((NumberTerm) s.getTerm(1)).solve() + this.position[1];
+                int x =  (int) ((NumberTerm) s.getTerm(0)).solve() + this.position[0];
+                int y = (int) ((NumberTerm) s.getTerm(1)).solve() + this.position[1];
                 updateMapTile(x, y, type);
             }
             for (Term t : goals) {
                 Structure s = (Structure) t;
                 String type = s.getFunctor().toString();
-                int x =  (int) -((NumberTerm) s.getTerm(0)).solve() + this.position[0];
-                int y = (int) -((NumberTerm) s.getTerm(1)).solve() + this.position[1];
+                int x =  (int) ((NumberTerm) s.getTerm(0)).solve() + this.position[0];
+                int y = (int) ((NumberTerm) s.getTerm(1)).solve() + this.position[1];
                 updateMapTile(x, y, type);
             }
         //printPosition();
@@ -102,7 +102,7 @@ public class Agent {
                     System.out.print("A");
                 }
                 else if(map[i][j].equals("unknown")){
-                   System.out.print(". "); 
+                   System.out.print(".."); 
                 }
                 else if(map[i][j].equals("dispenser")){
                     System.out.print("D");
