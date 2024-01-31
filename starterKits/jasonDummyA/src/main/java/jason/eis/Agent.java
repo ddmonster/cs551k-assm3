@@ -38,7 +38,7 @@ public class Agent {
         this.position[1] = 64;
         this.updates = 0;   //keep track of when to print the map
         this.map = new String[MAP_WIDTH*2][MAP_HEIGHT*2];
-        for (int i = 0; i < MAP_WIDTH; i++) {
+        for (int i = 0; i < MAP_WIDTH*2; i++) {
             Arrays.fill(map[i], "unknown");
         }
     }
@@ -96,13 +96,13 @@ public class Agent {
             System.out.print("-");
          }
          System.out.println();
-        for (int i = 0; i < map.length; i++) {
+        for (int i = map.length -1; i > 0; i--) {
             for (int j = 0; j < map[i].length; j++) {
                 if(i == position[0] && j == position[1]){
                     System.out.print("A");
                 }
                 else if(map[i][j].equals("unknown")){
-                   System.out.print("."); 
+                   System.out.print(". "); 
                 }
                 else if(map[i][j].equals("dispenser")){
                     System.out.print("D");
