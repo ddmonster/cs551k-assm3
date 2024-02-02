@@ -1,5 +1,9 @@
 package jason.eis;
 
+import jason.eis.Pathfinding;
+import jason.eis.PathfindingTest;
+
+
 import jason.eis.Agent;
 import eis.AgentListener;
 import eis.EnvironmentInterfaceStandard;
@@ -12,6 +16,7 @@ import jason.asSyntax.*;
 import jason.environment.Environment;
 import massim.eismassim.EnvironmentInterface;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +46,11 @@ public class EISAdapter extends Environment implements AgentListener {
     @Override
     public void init(String[] args) {
 
+        PathfindingTest pathfindingTest = new PathfindingTest();
+        //pathfindingTest.testFindBestRoute();
+        pathfindingTest.testFindBestRouteWithRandomObstacles();
+
+        
         ei = new EnvironmentInterface("conf/eismassimconfig.json");
 
         try {
@@ -129,6 +139,8 @@ public class EISAdapter extends Environment implements AgentListener {
             
             return true;
         }
+
+                        
 
 
         if (ei == null) {

@@ -7,13 +7,6 @@ previousPosition(64,64).
 !start.
 
 
-/*    Percepts updates - now done through !reportBeliefs    */
-/*
-+thing(X,Y, dispenser, T)[source(percept)] <- !updateDispensers(X,Y,T).
-+thing(X,Y, block, T)[source(percept)] <- !updateBlocks(X,Y,T).
-+obstacle(X,Y)[source(percept)] <- !updateObstacles(X,Y).
-+goal(X,Y)[source(percept)] <- !updateGoals(X,Y).
-*/
 
 
 /* Plans */
@@ -65,19 +58,6 @@ previousPosition(64,64).
 //otherwise OK, no action needed.
 +!revertPositionIfUnsuccessful: true <- true.
 
-/*
-+!updateDispensers(X,Y,T): currentPosition(X1,Y1) <-
-	+coordinate(X+X1, Y+Y1, dispenser, T).
-
-+!updateBlocks(X,Y,T): currentPosition(X1,Y1) <- true.
-	//TODO - blocks are not constant in the worldy
-
-+!updateObstacles(X,Y): currentPosition(X1,Y1) <-
-	+coordinate(X+ X1, Y+Y1, obstacle, none).
-
-+!updateGoals(X,Y): currentPosition(X1,Y1) <-
-	+coordinate(X + X1, Y+Y1, goal, none).
-*/
 
 +!reportBeliefs : currentPosition(X,Y) <- 
     .findall(thing(A,B,dispenser,D),thing(A,B,dispenser,D), Things);	//for mapping, we are only concerned with static objects
@@ -85,5 +65,7 @@ previousPosition(64,64).
 	.findall(goal(A,B),goal(A,B), Goals);
 	report(Things, Obstacles, Goals,X,Y).				//internal action - see syntax in EISAdapter.java, under ExecuteAction()
 
-	
++!planRoute : currentPosition(X,Y) & goal(Xg,Yg) <- 
+	.print("Planning route to goal");
+	.planRoute(X,Y,Xg,Yg).	
     
