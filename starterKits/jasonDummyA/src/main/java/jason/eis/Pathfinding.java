@@ -70,15 +70,15 @@ public class Pathfinding {
         while (previousNode != null) {
             if (currentNode.x == previousNode.x) {
                 if (currentNode.y > previousNode.y) {
-                    path.add(0, "N");
+                    path.add(0, "n");
                 } else {
-                    path.add(0, "S");
+                    path.add(0, "s");
                 }
             } else {
                 if (currentNode.x > previousNode.x) {
-                    path.add(0, "E");
+                    path.add(0, "e");
                 } else {
-                    path.add(0, "W");
+                    path.add(0, "w");
                 }
             }
             currentNode = previousNode;

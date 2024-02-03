@@ -2,6 +2,8 @@
 random_dir(DirList,RandomNumber,Dir) :- (RandomNumber <= 0.25 & .nth(0,DirList,Dir)) | (RandomNumber <= 0.5 & .nth(1,DirList,Dir)) | (RandomNumber <= 0.75 & .nth(2,DirList,Dir)) | (.nth(3,DirList,Dir)).
 currentPosition(64,64).
 previousPosition(64,64).
+//go to random position on the map (max 128x128)
+goto(10,10).
 /* Initial goals */
 
 !start.
@@ -22,13 +24,34 @@ previousPosition(64,64).
 	!revertPositionIfUnsuccessful;
 	//update the internal maps with percepts
 	!reportBeliefs.
+	
 
 
 	
 +actionID(Xactionid) : true <- 
 	.print("Determining my action");
-	!move_random.
+	!move1.
 //	skip.
+
+
++!move1 : currentPosition(X,Y) & goal(Xg,Yg) & nextMove(Dir) <- 
+	-nextMove(Dir);
+	getNextMovePath.
+
+
++!move1 : currentPosition(X,Y) & goto(Xg,Yg) <- 
+	calculateRoute(X,Y,Xg,Yg);
+	getNextMovePath.
+	
+
+
+	
+
++nextMove(Dir) : currentPosition(X,Y) <-
+	!moveAndUpdate(Dir, X, Y).
+
+
+	
 
 +!move_random : .random(RandomNumber) & random_dir([n,s,e,w],RandomNumber,Dir) & currentPosition(X,Y)
 <-	
@@ -65,7 +88,5 @@ previousPosition(64,64).
 	.findall(goal(A,B),goal(A,B), Goals);
 	report(Things, Obstacles, Goals,X,Y).				//internal action - see syntax in EISAdapter.java, under ExecuteAction()
 
-+!planRoute : currentPosition(X,Y) & goal(Xg,Yg) <- 
-	.print("Planning route to goal");
-	.planRoute(X,Y,Xg,Yg).	
+	
     

@@ -2,6 +2,7 @@ package jason.eis;
 
 import java.util.Arrays;
 import java.util.List;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import jason.eis.Agent;
@@ -29,6 +30,7 @@ public class Agent {
     private final int MAP_WIDTH = 64;
     private final int MAP_HEIGHT = 64;
     private int updates;
+    private ArrayList<String> directions; 
 
 
     public Agent(String name) {
@@ -41,10 +43,26 @@ public class Agent {
         for (int i = 0; i < MAP_WIDTH*2; i++) {
             Arrays.fill(map[i], "unknown");
         }
+        this.directions = new ArrayList<String>();
     }
     public void updatePosition(int x, int y) {
         this.position[0] = x;
         this.position[1] = y;
+    }
+
+    public void setDirections(ArrayList<String> directions) {
+        this.directions = directions;
+    }
+
+    public String popDirection() {
+        if (this.directions.size() > 0) {
+            return this.directions.remove(0);
+        }
+        return "none";
+    }
+
+    public String[][] getMap() {
+        return this.map;
     }
 
     public void updateMap(ListTerm things, ListTerm obstacles, ListTerm goals, NumberTerm currX, NumberTerm currY) {

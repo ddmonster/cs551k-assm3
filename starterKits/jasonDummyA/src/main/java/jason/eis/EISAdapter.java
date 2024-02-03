@@ -46,10 +46,6 @@ public class EISAdapter extends Environment implements AgentListener {
     @Override
     public void init(String[] args) {
 
-        PathfindingTest pathfindingTest = new PathfindingTest();
-        //pathfindingTest.testFindBestRoute();
-        pathfindingTest.testFindBestRouteWithRandomObstacles();
-
         
         ei = new EnvironmentInterface("conf/eismassimconfig.json");
 
@@ -140,7 +136,29 @@ public class EISAdapter extends Environment implements AgentListener {
             return true;
         }
 
-                        
+        if(action.getFunctor().equals("calculateRoute")){
+            try{
+                int startX = (int) ((NumberTerm) action.getTerm(0)).solve();
+                int startY = (int) ((NumberTerm) action.getTerm(1)).solve();
+                int destX = (int) ((NumberTerm) action.getTerm(2)).solve();
+                int destY = (int) ((NumberTerm) action.getTerm(3)).solve();
+                String[][] map = agents.get(agName).getMap();
+                ArrayList<String> directions = Pathfinding.findBestRoute(map, startX, startY, destX, destY);
+                agents.get(agName).setDirections(directions);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+            return true;
+        }
+        if(action.getFunctor().equals("getNextMovePath")){
+            try{
+            addPercept(ASSyntax.parseLiteral("nextMove(" + agents.get(agName).popDirection() + ")"));
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+        }
 
 
         if (ei == null) {
