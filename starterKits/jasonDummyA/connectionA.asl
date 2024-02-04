@@ -25,6 +25,7 @@ currentState(exploring).
 	.print("Received step percept.");
 	!revertPositionIfUnsuccessful;								//check if last move was successful	
 	!reportBeliefs;												//update the internal maps with percepts
+	//!checkIfTaskStillAvailable;								//Check if the task that the agent is focusing on is still available - if not, change to another task TODO
 	if(Xstep > 13 & Xstep mod 7 = 0 & currentState(exploring)){	//stop exploring past step 14, if no appropriate tasks found it will return to exploration and revisit each 7 steps
 		-currentState(exploring);		
 		+currentState(deliberating);
@@ -33,12 +34,22 @@ currentState(exploring).
 	}.
 
 
-+actionID(Xactionid): currentState(travellingToGoal) <-
-	print("I would be travelling to goal, but I haven't been programmed to do so yet.");
-	!skip.
+
+//if agent is travelling to goal and reached goal.
++actionID(Xactionid): currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-
+							//TODO: Currently all agents are focusing on the same task, so after one agent has submitted the rest of them will fail
+	!submitOrRotate.		//agent is now in position for submission.
+
+//this should be invoked just after agent has submitted a task - go back to finding a new dispenser (or whatever we set the task allocation algorithm to).
++actionID(Xactionid): currentState(travellingToGoal) & blockAttached(yes) & goal(0, 0) & not(blockAttached(yes)) <-
+	-goTo(_,_);
+	-currentState(travellingToGoal);
+	+currentState(deliberating);
+	!findDispenser.
+
 
 //if there is a block next to the agent, pick it up
-+actionID(Xactionid): currentState(pickingUpBlock) & focusOnTask(_,_,DType) & (thing(0,1,block,BType) | thing(0,-1,block,BType) | thing(1,0,block,BType) | thing(-1,0,block,BType)) <-
++actionID(Xactionid): currentState(pickingUpBlock) & focusOnTask(_,_,_,DType) & (thing(0,1,block,BType) | thing(0,-1,block,BType) | thing(1,0,block,BType) | thing(-1,0,block,BType)) <-
 	.print("Block next to me.");
 	if(thing(0,1,dispenser,DType)){	//request blocks
 		attach(s);
@@ -52,12 +63,15 @@ currentState(exploring).
 	if(thing(-1,0,dispenser,DType)){	
 		attach(w);
 	};
+	+blockAttached(yes);
 	-currentState(pickingUpBlock);
-	+currentState(travellingToGoal).
+	+currentState(travellingToGoal);
+	-nearestDispenser(_,_);				//don't care where nearest dispenser is - after completing a goal there can be another one
+	!findGoal.							//call a plan that finds the closest goal.
 	
 
 //Move towards the dispenser & see if you land next to a dispenser
-+actionID(Xactionid) : goTo(_,_) & focusOnTask(_,_,DType) & (thing(0,1,dispenser,DType) | thing(0,-1,dispenser,DType) | thing(1,0,dispenser,DType) | thing(-1,0,dispenser,DType))<- 
++actionID(Xactionid) : not(blockAttached(yes)) & goTo(_,_) & focusOnTask(_,_,_,DType) & (thing(0,1,dispenser,DType) | thing(0,-1,dispenser,DType) | thing(1,0,dispenser,DType) | thing(-1,0,dispenser,DType))<- 
 	.print("Dispenser next to me.");
 	if(thing(0,1,dispenser,DType)){	//request blocks
 		request(s);
@@ -75,43 +89,50 @@ currentState(exploring).
 	-goTo(_,_);
 	+currentState(pickingUpBlock).
 
-//Any other plan to move somewhere.
+//Any other plan to move somewhere (right now includes moving to goal unimpeded).
 +actionID(Xactionid) : goTo(_,_) <- 
-	.print("Determining my action");
-	!move1.
+	.print("Moving according to plan");
+	!intentionalMove.
 
 //If we're still exploring, TODO EXPLORATION PLAN.
 +actionID(Xactionid) : currentState(exploring) <- 
-	.print("Determining my action");
+	.print("Exploring");
 	!move_random.
 
 //for testing
 +actionID(Xactionid) : currentState(chilling) <- 
-	.print("Determining my action");
+	.print("Skipping my action");
 	!skip.
 
 //	Otherwise, move randomly.
 +actionID(Xactionid) : true <- 
-	.print("Determining my action");
+	.print("Moving randomly");
 	!move_random.
 
 
+//--------------------------ADD ME--------------------------------
+
++!submitOrRotate: focusOnTask(Name, Xrel, Yrel, _) <- 
+	request(n);		//just to submit any action, while waiting for implementation
+	!submitOrRotate.	//loop as placeholder
+
+//----------------------------------------------------------------
+
 //if following a path, continue down it.
-+!move1 : currentPosition(X,Y) & goTo(Xg,Yg) & nextMove(Dir) <- 
++!intentionalMove : currentPosition(X,Y) & goTo(Xg,Yg) & nextMove(Dir) <- 
 	-nextMove(Dir);
 	if(not(X = Xg) & not(Y = Yg)){
 		getNextMovePath;
 	};
 	if(X = Xg & Y = Yg){	//reached goal, get rid of the goal
-							//Note: the goal should be get rid of with other functions anyway
-		-goTo(Xg, Yg);
+		-goTo(Xg, Yg);		//Note: the goal should be get rid of with other functions anyway
 		-currentState(deliberating);
 		+currentState(chilling);
 	}.
 	
 
-
-+!move1 : currentPosition(X,Y) & goTo(Xg,Yg) <- 
+//start a path from A to B.
++!intentionalMove : currentPosition(X,Y) & goTo(Xg,Yg) <- 
 	calculateRoute(X,Y,Xg,Yg);			//Calculate route to given objective,
 	getNextMovePath.					//add percept nextMove(X), which activates function below
 	
@@ -124,6 +145,7 @@ currentState(exploring).
 	!moveAndUpdate(Dir, X, Y).
 
 //plan to use for moving, which includes positional updates.
+@moveAndUpdate[atomic]
 +!moveAndUpdate(Dir, X, Y): true <-
 	move(Dir);!updatePosition(Dir); -previousPosition(_,_); +previousPosition(X,Y).
 
@@ -141,16 +163,35 @@ currentState(exploring).
 
 //revert to last position if move was unsuccessful.
 @revertPositionIfUnsuccessful[atomic]
-+!revertPositionIfUnsuccessful: lastAction(move) & not lastActionResult(success) & previousPosition(X,Y) <-
-	//.print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAReverting position");
-	-currentPosition(_,_); +currentPosition(X,Y).
-//otherwise OK, no action needed.
-+!revertPositionIfUnsuccessful: true <- true.
++!revertPositionIfUnsuccessful:  previousPosition(X,Y) <-
+	if(lastAction(move) & not lastActionResult(success)){
+		-currentPosition(_,_); +currentPosition(X,Y);
+	}.
 
+//find the closest goal where an objective can be completed.
++!findGoal: true <-
+	findNearestGoal.	//adds the nearestGoal() percept.
+
++nearestGoal(Xn, Yn): true <-
+	if(Xn = -1 & Yn = -1){				//error code - no goals found - continue exploring TODO needs investigation if it's actually correct
+		+currentState(exploring);
+		-currentState(travellingToGoal);	
+	};
+	if(not(Xn = -1) & not(Yn = -1)){
+		+goTo(Xn,Yn);					//Nearest goal found - now go towards it
+	}.
+
+//Edge case - if was deliberating but has a block already, go straight to goal
++!findDispenser: currentState(deliberating) &task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) & blockAttached(yes) <-
+	-currentState(deliberating);
+	+currentState(travellingToGoal);
+	!findGoal.	
 //if deliberating and there is an appropriate 1-block task, take it and go to the nearest dispenser
-+!findDispenser: currentState(deliberating) &task(_,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) <-
-	+focusOnTask(Xrel,Yrel,DispType);					//This agent is now focusing on the task at hand
++!findDispenser: currentState(deliberating) &task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) <-
+	+focusOnTask(name,Xrel,Yrel,DispType);					//This agent is now focusing on the task at hand
 	findNearestDispenser(DispType).						//adds belief nearestDispenser(Xnew,Ynew), which triggers function below
+
+					
 
 +nearestDispenser(Xn,Yn) :true <-
 	-currentState(deliberating);
@@ -163,10 +204,7 @@ currentState(exploring).
 	}.
 
 
-
-
-
-
+//function for updating the map of the agent (internally).
 +!reportBeliefs : currentPosition(X,Y) <- 
     .findall(thing(A,B,dispenser,D),thing(A,B,dispenser,D), Things);	//for mapping, we are only concerned with static objects
 	.findall(obstacle(A,B),obstacle(A,B), Obstacles);

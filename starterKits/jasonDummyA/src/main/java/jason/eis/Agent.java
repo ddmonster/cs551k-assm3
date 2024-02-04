@@ -20,7 +20,7 @@ import jason.asSyntax.NumberTerm;
 import jason.asSyntax.NumberTerm;
 import jason.asSyntax.Structure;
 import jason.asSyntax.Term;
-import jason.asSyntax.ListTerm;
+import jason.asSyntax.ListTerm; 
 
 
 public class Agent {
@@ -32,6 +32,7 @@ public class Agent {
     private int updates;
     private ArrayList<String> directions; 
     private List<List<Object>> dispenserList;
+    private List<List<Object>> goalList;
 
 
     public Agent(String name) {
@@ -42,6 +43,7 @@ public class Agent {
         this.updates = 0;   //keep track of when to print the map
         this.map = new String[MAP_WIDTH*2][MAP_HEIGHT*2];
         this.dispenserList = new ArrayList<>();
+        this.goalList = new ArrayList<>();
         for (int i = 0; i < MAP_WIDTH*2; i++) {
             Arrays.fill(map[i], "unknown");
         }
@@ -91,6 +93,7 @@ public class Agent {
                 int x =  (int) ((NumberTerm) s.getTerm(0)).solve() + this.position[0];
                 int y = (int) ((NumberTerm) s.getTerm(1)).solve() + this.position[1];
                 updateMapTile(x, y, type);
+                this.goalList.add(List.of(x,y));
             }
         
         //printPosition();
@@ -135,6 +138,26 @@ public class Agent {
         result.add(yToReturn);
         return result;
     }
+    public ArrayList<Integer> findClosestGoal(){ //Same function as above
+        int currentShortestDistance = 9999;         //inf
+        int thisDistance, xToReturn = -1, yToReturn = -1;   //-1 - no goal found
+        ArrayList<Integer>result = new ArrayList<>();
+        for (List<Object> data : this.goalList) {      //run through entire list, update goal that is closest
+            int xGoal = (int) data.get(0);
+            int yGoal = (int) data.get(1);
+            //heuristic same as in Pathfinding.java class
+            thisDistance = Math.abs(this.position[0] - xGoal) + Math.abs(this.position[1] - yGoal);
+            if (thisDistance < currentShortestDistance){
+                xToReturn = xGoal;
+                yToReturn = yGoal;
+            }
+        }
+        result.add(xToReturn);
+        result.add(yToReturn);
+        return result;
+    }
+
+
  
     // --------------------------Debugging functions--------------------------------
     public void printPosition(){

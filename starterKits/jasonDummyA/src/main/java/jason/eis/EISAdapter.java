@@ -175,6 +175,18 @@ public class EISAdapter extends Environment implements AgentListener {
             }
             return true;
         }
+        //function to add percept nearestGoal(X,Y)
+        if(action.getFunctor().equals("findNearestGoal")){
+            try{
+                ArrayList<Integer> directions = agents.get(agName).findClosestGoal();
+                Literal literalToAdd = ASSyntax.createLiteral("nearestGoal",ASSyntax.createNumber(directions.get(0)),ASSyntax.createNumber(directions.get(1)));
+                addPercept(agName, literalToAdd);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+            return true;
+        }
 
 
 
