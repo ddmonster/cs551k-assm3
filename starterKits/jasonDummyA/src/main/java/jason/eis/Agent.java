@@ -116,7 +116,7 @@ public class Agent {
     public ArrayList<Integer> findClosestDispenserOfType(String dispenserType){ //either "bo" or "b1"
         String dispenserToMatch = "dispenser" + dispenserType;
         int currentShortestDistance = 9999;         //inf
-        int thisDistance, xToReturn = this.position[0], yToReturn = this.position[1];
+        int thisDistance, xToReturn = -1, yToReturn = -1;   //-1 indicates that no dispensers were found
         ArrayList<Integer>result = new ArrayList<>();
         for (List<Object> data : this.dispenserList) {      //run through entire list, update dispenser that's closest over time
             String thisDispenser = (String) data.get(2);

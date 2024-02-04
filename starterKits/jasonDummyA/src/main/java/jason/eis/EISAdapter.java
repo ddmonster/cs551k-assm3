@@ -166,6 +166,7 @@ public class EISAdapter extends Environment implements AgentListener {
             try{
                 String dispenserType = action.getTerm(0).toString();
                 ArrayList<Integer> directions = agents.get(agName).findClosestDispenserOfType(dispenserType);
+                //System.out.println(agName + directions.get(0) + "       " + directions.get(1));
                 Literal literalToAdd = ASSyntax.createLiteral("nearestDispenser",ASSyntax.createNumber(directions.get(0)),ASSyntax.createNumber(directions.get(1)));
                 addPercept(agName, literalToAdd);
             }
