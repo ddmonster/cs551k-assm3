@@ -3,7 +3,7 @@ random_dir(DirList,RandomNumber,Dir) :- (RandomNumber <= 0.25 & .nth(0,DirList,D
 currentPosition(64,64).
 previousPosition(64,64).
 //go to random position on the map (max 128x128)
-goto(10,10).
+//goTo(65,65).
 /* Initial goals */
 
 !start.
@@ -26,22 +26,25 @@ goto(10,10).
 	!reportBeliefs.
 	
 
-
-	
-+actionID(Xactionid) : true <- 
+//Move somewhere if there is a plan to move somewhere.
++actionID(Xactionid) : goTo(_,_) <- 
 	.print("Determining my action");
 	!move1.
+//	Otherwise, move randomly.
++actionID(Xactionid) : true <- 
+	.print("Determining my action");
+	!move_random.
 //	skip.
 
-
+//if following a path, continue down it.
 +!move1 : currentPosition(X,Y) & goal(Xg,Yg) & nextMove(Dir) <- 
 	-nextMove(Dir);
 	getNextMovePath.
 
 
-+!move1 : currentPosition(X,Y) & goto(Xg,Yg) <- 
-	calculateRoute(X,Y,Xg,Yg);
-	getNextMovePath.
++!move1 : currentPosition(X,Y) & goTo(Xg,Yg) <- 
+	calculateRoute(X,Y,Xg,Yg);			//Calculate route to given objective,
+	getNextMovePath.					//add percept nextMove(X), which activates function below
 	
 
 

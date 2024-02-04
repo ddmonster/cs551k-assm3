@@ -31,6 +31,7 @@ public class Agent {
     private final int MAP_HEIGHT = 64;
     private int updates;
     private ArrayList<String> directions; 
+    private List<List<Object>> dispenserList;
 
 
     public Agent(String name) {
@@ -40,6 +41,7 @@ public class Agent {
         this.position[1] = 64;
         this.updates = 0;   //keep track of when to print the map
         this.map = new String[MAP_WIDTH*2][MAP_HEIGHT*2];
+        this.dispenserList = new ArrayList<>();
         for (int i = 0; i < MAP_WIDTH*2; i++) {
             Arrays.fill(map[i], "unknown");
         }
@@ -68,21 +70,22 @@ public class Agent {
     public void updateMap(ListTerm things, ListTerm obstacles, ListTerm goals, NumberTerm currX, NumberTerm currY) {
         try{
             updatePosition((int)currX.solve(), (int)currY.solve());
-            for (Term t : things) {
+            for (Term t : things) { //dispensers
                 Structure s = (Structure) t;
                 String type = s.getTerm(2).toString() + s.getTerm(3).toString(); //dispenserb0
                 int x =  (int) ((NumberTerm) s.getTerm(0)).solve() + this.position[0];
                 int y = (int) ((NumberTerm) s.getTerm(1)).solve() + this.position[1];
                 updateMapTile(x, y, type);
+                this.dispenserList.add(List.of(x,y,type));
             }
-            for (Term t : obstacles) {
+            for (Term t : obstacles) {  //obstacles - for pathfinding avoidance
                 Structure s = (Structure) t;
                 String type = s.getFunctor().toString();
                 int x =  (int) ((NumberTerm) s.getTerm(0)).solve() + this.position[0];
                 int y = (int) ((NumberTerm) s.getTerm(1)).solve() + this.position[1];
                 updateMapTile(x, y, type);
             }
-            for (Term t : goals) {
+            for (Term t : goals) {  //goals
                 Structure s = (Structure) t;
                 String type = s.getFunctor().toString();
                 int x =  (int) ((NumberTerm) s.getTerm(0)).solve() + this.position[0];
@@ -91,12 +94,13 @@ public class Agent {
             }
         
         //printPosition();
-        /*
+        
         this.updates+=1;
-        if(this.updates % 20 == 0 && this.name.equals("connectionA1")){
-            printMap();
+        if(this.updates % 20 == 0 && this.name.equals("connectionA1")){         //Debugging stuff
+            //printMap();
+            //printDispenserList();
         }
-        */
+        
         
         } catch (Exception e) {
             System.out.println("Error updating map:");
@@ -108,7 +112,7 @@ public class Agent {
     public void updateMapTile(int x, int y, String tileType) {
         map[x][y] = tileType;
     }
-
+    // --------------------------Debugging functions--------------------------------
     public void printPosition(){
         System.out.println(name + "position - X: " +position[0] + "Y: "+ position[1]);  
     }
@@ -145,6 +149,14 @@ public class Agent {
          }
          System.out.println();
         
+    }
+    public void printDispenserList(){
+        for (List<Object> data : this.dispenserList) {
+            int x = (int) data.get(0);
+            int y = (int) data.get(1);
+            String stringValue = (String) data.get(2);
+            System.out.println("X: " + x + ", Y: " + y + ", String: " + stringValue);
+            }
     }
 
 }
