@@ -135,7 +135,7 @@ public class EISAdapter extends Environment implements AgentListener {
             
             return true;
         }
-
+        //function for internal route Calculation, used for "getNextMovePath"
         if(action.getFunctor().equals("calculateRoute")){
             try{
                 int startX = (int) ((NumberTerm) action.getTerm(0)).solve();
@@ -151,14 +151,30 @@ public class EISAdapter extends Environment implements AgentListener {
             }
             return true;
         }
+        //adds percept nextMove(Dir), based on calculated path
         if(action.getFunctor().equals("getNextMovePath")){
             try{
-            addPercept(ASSyntax.parseLiteral("nextMove(" + agents.get(agName).popDirection() + ")"));
+            addPercept(agName, ASSyntax.parseLiteral("nextMove(" + agents.get(agName).popDirection() + ")"));
             }
             catch(Exception e){
                 e.printStackTrace();
             }
+            return true;
         }
+        //function to add percept nearestDispenser(X,Y)
+        if(action.getFunctor().equals("findNearestDispenser")){
+            try{
+                String dispenserType = action.getTerm(0).toString();
+                ArrayList<Integer> directions = agents.get(agName).findClosestDispenserOfType(dispenserType);
+                Literal literalToAdd = ASSyntax.createLiteral("nearestDispenser",ASSyntax.createNumber(directions.get(0)),ASSyntax.createNumber(directions.get(1)));
+                addPercept(agName, literalToAdd);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+            return true;
+        }
+
 
 
         if (ei == null) {

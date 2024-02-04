@@ -112,6 +112,30 @@ public class Agent {
     public void updateMapTile(int x, int y, String tileType) {
         map[x][y] = tileType;
     }
+
+    public ArrayList<Integer> findClosestDispenserOfType(String dispenserType){ //either "bo" or "b1"
+        String dispenserToMatch = "dispenser" + dispenserType;
+        int currentShortestDistance = 9999;         //inf
+        int thisDistance, xToReturn = this.position[0], yToReturn = this.position[1];
+        ArrayList<Integer>result = new ArrayList<>();
+        for (List<Object> data : this.dispenserList) {      //run through entire list, update dispenser that's closest over time
+            String thisDispenser = (String) data.get(2);
+            if(thisDispenser.equals(dispenserToMatch))  {    //dispenser of type that we want to find
+                int xDisp = (int) data.get(0);
+                int yDisp = (int) data.get(1);
+                //heuristic same as in Pathfinding.java class
+                thisDistance = Math.abs(this.position[0] - xDisp) + Math.abs(this.position[1] - yDisp);
+                if (thisDistance < currentShortestDistance){
+                    xToReturn = xDisp;
+                    yToReturn = yDisp;
+                }
+            }
+        }
+        result.add(xToReturn);
+        result.add(yToReturn);
+        return result;
+    }
+ 
     // --------------------------Debugging functions--------------------------------
     public void printPosition(){
         System.out.println(name + "position - X: " +position[0] + "Y: "+ position[1]);  

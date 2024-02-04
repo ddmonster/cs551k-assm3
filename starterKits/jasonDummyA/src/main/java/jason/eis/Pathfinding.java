@@ -44,7 +44,7 @@ public class Pathfinding {
                 return reconstructPath(currentNode);
             }
 
-            int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}}; // Representing N, E, S, W
+            int[][] directions = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}}; // Representing N, E, S, W
             for (int[] direction : directions) {
                 int neighborX = currentNode.x + direction[0];
                 int neighborY = currentNode.y + direction[1];
@@ -69,7 +69,7 @@ public class Pathfinding {
 
         while (previousNode != null) {
             if (currentNode.x == previousNode.x) {
-                if (currentNode.y > previousNode.y) {
+                if (currentNode.y < previousNode.y) {
                     path.add(0, "n");
                 } else {
                     path.add(0, "s");
