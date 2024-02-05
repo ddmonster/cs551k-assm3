@@ -1,5 +1,11 @@
 /* Initial beliefs and rules */
-random_dir(DirList,RandomNumber,Dir) :- (RandomNumber <= 0.25 & .nth(0,DirList,Dir)) | (RandomNumber <= 0.5 & .nth(1,DirList,Dir)) | (RandomNumber <= 0.75 & .nth(2,DirList,Dir)) | (.nth(3,DirList,Dir)).
+random_dir(DirList,RandomNumber,Dir) :- 
+(RandomNumber <= 0.25 & .nth(0,DirList,Dir)) |
+(RandomNumber <= 0.5 & .nth(1,DirList,Dir))  |
+(RandomNumber <= 0.75 & .nth(2,DirList,Dir)) | 
+(.nth(3,DirList,Dir)).
+//random dir that takes into account the boundaries
+
 req1FromTask(ReqList,req(X,Y,DispType)) :- .nth(0, ReqList, req(X,Y,DispType)).	//task(task77,290,40,[req(-1,1,b1),req(0,1,b1)]) - takes [req(-1,1,b1),req(0,1,b1)], returns req(-1,1,b1)
 req2FromTask(ReqList,req(X,Y,DispType)) :- .nth(1, ReqList, req(X,Y,DispType)).
 currentPosition(64,64).
@@ -142,7 +148,14 @@ currentState(exploring).
 
 +!move_random : .random(RandomNumber) & random_dir([n,s,e,w],RandomNumber,Dir) & currentPosition(X,Y)
 <-	
-	!moveAndUpdate(Dir, X, Y).
+	if (Dir = n & not (boundary(Y-1, n)) & not (obstacle(X,Y-1))) {!moveAndUpdate(Dir, X, Y)
+	}elif (Dir = s & not (boundary(Y+1, s)) & not (obstacle(X,Y+1))) {!moveAndUpdate(Dir, X, Y)
+	}elif (Dir = e & not (boundary(X+1, e)) & not (obstacle(X+1,Y))) {!moveAndUpdate(Dir, X, Y)
+	}elif (Dir = w & not (boundary(X-1, w)) & not (obstacle(X-1,Y))) {!moveAndUpdate(Dir, X, Y)
+	}else{!move_random}.	//if the random move is unsuccessful, try again.
+	
+	
+	
 
 //plan to use for moving, which includes positional updates.
 @moveAndUpdate[atomic]
@@ -167,6 +180,17 @@ currentState(exploring).
 	if(lastAction(move) & not lastActionResult(success)){
 		-currentPosition(_,_); +currentPosition(X,Y);
 	}.
+
+@addBoundary[atomic]
++lastActionResult(failed_forbidden) : currentPosition(X,Y) & lastAction(move) & lastActionParams([Dir]) <-
+	if(Dir = n){ +boundary(Y-1, s)};  
+	if(Dir = s){ +boundary(Y+1, n)};
+	if(Dir = e){ +boundary(X+1, w)};
+	if(Dir = w){ +boundary(X-1, e)};
+    .print("Boundary added to prevent moving out of bounds.").
+	
+
+
 
 //find the closest goal where an objective can be completed.
 +!findGoal: true <-
