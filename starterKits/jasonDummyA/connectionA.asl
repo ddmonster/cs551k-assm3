@@ -121,13 +121,29 @@ currentState(exploring).
 
 
 //--------------------------ADD ME--------------------------------
++!submitOrRotate: focusOnTask(Name, Xrel, Yrel, DispType) & currentPosition(X, Y) & goal(GoalX, GoalY) & blockAttached(yes) <-
+    calculateDirectionToGoal(X, Y, GoalX, GoalY, Direction),
+    (isFacingGoal(Direction) -> submitBlock(Direction); rotateToGoal(Direction)),
+    checkSubmissionResult.
 
-+!submitOrRotate: focusOnTask(Name, Xrel, Yrel, _) <-
-	if(thing(Xrel,Yrel, block, _)){
-	submit(Name);
-	}else{
-	!rotation(X,Y, Xrel, Yrel)
-	}.
++!rotateToGoal(Direction): true <-
+    .print("Rotating to face ", Direction),
+    rotate(Direction),  // Suppose that rotate(Direction) is an action that rotates the agent in a specific direction
+    .print("Now facing ", Direction).
+
++!checkSubmissionResult: true <-
+    .wait(1000),  // Wait a while to receive the submission results
+    (lastActionResult(success) -> 
+        .print("Submission successful."),
+        -blockAttached(yes),
+        +currentState(searchingForNextTask);
+    .print("Submission failed, trying again."),
+    !submitOrRotate).
++!calculateDirectionToGoal(AgentX, AgentY, GoalX, GoalY, Direction) : true <-
+    (GoalX > AgentX -> Direction = east;
+     GoalX < AgentX -> Direction = west;
+     GoalY > AgentY -> Direction = south;
+     GoalY < AgentY -> Direction = north).
 
 //----------------------------------------------------------------
 
