@@ -119,8 +119,12 @@ currentState(exploring).
 //--------------------------ADD ME--------------------------------
 
 +!submitOrRotate: focusOnTask(Name, Xrel, Yrel, _) <- 
-	request(n);		//just to submit any action, while waiting for implementation
-	!submitOrRotate.	//loop as placeholder
+	if(thing(Xrel,Yrel, block, _)){
+	submit(Name);
+	}else{
+	!rotation(X,Y, Xrel, Yrel);
+	}
+	!submitOrRotate.
 
 //----------------------------------------------------------------
 
@@ -239,7 +243,7 @@ currentState(exploring).
 	!findGoal.	
 //if deliberating and there is an appropriate 1-block task, take it and go to the nearest dispenser
 +!findDispenser: currentState(deliberating) &task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) <-
-	+focusOnTask(name,Xrel,Yrel,DispType);					//This agent is now focusing on the task at hand
+	+focusOnTask(Name,Xrel,Yrel,DispType);					//This agent is now focusing on the task at hand
 	findNearestDispenser(DispType).						//adds belief nearestDispenser(Xnew,Ynew), which triggers function below
 
 					
@@ -262,3 +266,21 @@ currentState(exploring).
 	.findall(goal(A,B),goal(A,B), Goals);
 	report(Things, Obstacles, Goals,X,Y).				//internal action - see syntax in EISAdapter.java, under ExecuteAction()
 
++!rotation(X,Y, GoalX, GoalY): true <-
+	if(X = GoalX & Y < GoalY){	//rotate clockwise
+		rotate(cw);
+	}elif(X = GoalX & Y > GoalY){	//rotate counterclockwise
+		rotate(ccw);
+	}elif(X < GoalX & Y = GoalY){	//rotate clockwise
+		rotate(cw);
+	}elif(X > GoalX & Y = GoalY){	//rotate counterclockwise
+		rotate(ccw);
+	}elif(X < GoalX & Y < GoalY){	//rotate clockwise
+		rotate(cw);
+	}elif(X > GoalX & Y > GoalY){	//rotate counterclockwise
+		rotate(ccw);
+	}elif(X > GoalX & Y < GoalY){	//rotate clockwise
+		rotate(cw);
+	}elif(X < GoalX & Y > GoalY){	//rotate counterclockwise
+		rotate(ccw);
+	}.
