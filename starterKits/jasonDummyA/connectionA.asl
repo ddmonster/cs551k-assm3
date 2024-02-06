@@ -247,5 +247,29 @@ currentState(exploring).
 	.findall(goal(A,B),goal(A,B), Goals);
 	report(Things, Obstacles, Goals,X,Y).				//internal action - see syntax in EISAdapter.java, under ExecuteAction()
 
-	
-    
+// Possible evasion
++thing(0,1,entity,_): nextMove(s) & currentPosition(X,Y)
+	<- 
+	-nextMove(_); 
+	+nextMove(w);
+	!moveAndUpdate(Dir, X, Y);
+	!intentionalMove.
++thing(0,-1,entity,_): nextMove(n) & currentPosition(X,Y)
+	<- 
+	-nextMove(_); 
+	+nextMove(e);
+	!moveAndUpdate(Dir, X, Y);
+	!intentionalMove.
++thing(1,0,entity,_): nextMove(w) & currentPosition(X,Y)
+	<- 
+	-nextMove(_); 
+	+nextMove(s);
+	!moveAndUpdate(Dir, X, Y);
+	!intentionalMove.
++thing(-1,0,entity,_): nextMove(e) & currentPosition(X,Y)
+	<- 
+	-nextMove(_); 
+	+nextMove(n);
+	!moveAndUpdate(Dir, X, Y);
+	!intentionalMove.
+
