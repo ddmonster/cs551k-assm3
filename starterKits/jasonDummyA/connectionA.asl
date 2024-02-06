@@ -145,7 +145,16 @@ currentState(exploring).
 	getNextMovePath.					//add percept nextMove(X), which activates function below
 	
 +nextMove(Dir) : currentPosition(X,Y) <-
-	!moveAndUpdate(Dir, X, Y).	//move to the next position in the path.
+	if(thing(0,2,entity,_) & Dir = s){
+		!moveAndUpdate(w, X, Y); -nextMove(_);
+	}elif(thing(0,-2,entity,_) & Dir = n){
+		!moveAndUpdate(w, X, Y); -nextMove(_);
+	}elif(thing(2,0,entity,_) & Dir = e){
+		!moveAndUpdate(w, X, Y); -nextMove(_);
+	}elif(thing(-2,0,entity,_) & Dir = w){
+		!moveAndUpdate(w, X, Y); -nextMove(_);
+	}else{
+	!moveAndUpdate(Dir, X, Y)}.	//move to the next position in the path.
 	
 	
 
