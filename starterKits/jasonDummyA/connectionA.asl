@@ -5,7 +5,7 @@ random_dir(DirList,RandomNumber,Dir) :-
 (RandomNumber <= 0.75 & .nth(2,DirList,Dir)) | 
 (.nth(3,DirList,Dir)).
 //random dir that takes into account the boundaries
-
+randomDispType(DList, RandomNumber, DType) :- (RandomNumber <= 0.5 & .nth(0,DList, DType) | .nth(1, DList, DType)).
 req1FromTask(ReqList,req(X,Y,DispType)) :- .nth(0, ReqList, req(X,Y,DispType)).	//task(task77,290,40,[req(-1,1,b1),req(0,1,b1)]) - takes [req(-1,1,b1),req(0,1,b1)], returns req(-1,1,b1)
 req2FromTask(ReqList,req(X,Y,DispType)) :- .nth(1, ReqList, req(X,Y,DispType)).
 currentPosition(64,64).
@@ -31,7 +31,6 @@ currentState(exploring).
 	.print("Received step percept.");
 	!revertPositionIfUnsuccessful;								//check if last move was successful	
 	!reportBeliefs;												//update the internal maps with percepts
-	//!checkIfTaskStillAvailable;								//Check if the task that the agent is focusing on is still available - if not, change to another task TODO
 	if(Xstep > 13 & Xstep mod 7 = 0 & currentState(exploring)){	//stop exploring past step 14, if no appropriate tasks found it will return to exploration and revisit each 7 steps
 		-currentState(exploring);		
 		+currentState(deliberating);
@@ -48,18 +47,10 @@ currentState(exploring).
 
 //if agent is travelling to goal and reached goal.
 +actionID(Xactionid): currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-			//TODO: Currently all agents are focusing on the same task, so after one agent has submitted the rest of them will fail
+	//!checkIfTaskStillAvailable;							     	//Check if the task that the agent is focusing on is still available - if not, change to another task 
 	.print("I am at goal, will attempt to submit now");
 	!submitOrRotate.		//agent is now in position for submission.
 
-//this should be invoked just after agent has submitted a task - go back to finding a new dispenser (or whatever we set the task allocation algorithm to).
-/*
-+actionID(Xactionid): currentState(travellingToGoal) & goal(0, 0) & not(blockAttached(yes)) <-
-	.print("Just submitted a task");
-	-goTo(_,_);
-	-currentState(travellingToGoal);
-	+currentState(deliberating);
-	!findDispenser;
-*/
 
 //if there is a block next to the agent, pick it up
 +actionID(Xactionid): currentState(pickingUpBlock) & focusOnTask(_,_,_,DType) & (thing(0,1,block,BType) | thing(0,-1,block,BType) | thing(1,0,block,BType) | thing(-1,0,block,BType)) <-
@@ -249,12 +240,12 @@ currentState(exploring).
 	}.
 
 //Edge case - if was deliberating but has a block already, go straight to goal
-+!findDispenser: currentState(deliberating) &task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) & blockAttached(yes) <-
++!findDispenser: currentState(deliberating) &task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) &blockAttached(yes) & .random(N) & randomDispType([b0,b1], N, DispType)  <-
 	-currentState(deliberating);
 	+currentState(travellingToGoal);
 	!findGoal.	
 //if deliberating and there is an appropriate 1-block task, take it and go to the nearest dispenser
-+!findDispenser: currentState(deliberating) &task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) & not(blockAttached(yes)) <-
++!findDispenser: currentState(deliberating) &task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) &.random(N) & randomDispType([b0,b1], N, DispType) <-
 	+focusOnTask(Name,Xrel,Yrel,DispType);					//This agent is now focusing on the task at hand
 	findNearestDispenser(DispType).						//adds belief nearestDispenser(Xnew,Ynew), which triggers function below
 
@@ -295,6 +286,29 @@ currentState(exploring).
 	}elif(X < GoalX & Y > GoalY){	//rotate counterclockwise
 		rotate(ccw);
 	}.
+@checkIfTaskStillAvailable[atomic] 		//atomic so that the update happens before next plan is called. Agent needs to know the name of task for submission
++!checkIfTaskStillAvailable: focusOnTask(Name, Xrel, Yrel, Dtype) & task(NewName,_,10, ReqList) & req1FromTask(ReqList, req(NewXrel,NewYrel,DispType)) <-
+	if(Name = NewName){	//all OK, task still available
+		true;
+	}
+	elif(not(Name = NewName)){	//the topmost task is no longer available:
+		-focusOnTask(_,_,_,_);
+		if(Dtype = DispType){	//new task found has the same type of block - we are happy
+			+focusOnTask(NewName, NewXrel, NewYrel, Dtype);
+		}
+		elif(task(SameType, Xr2, Yr2, Dtype)){			//task is not topmost, but still exists - take it
+			+focusOnTask(SameType, Xr2, Yr2, Dtype);	
+		}
+		elif(not(Dtype = DispType) & not(blockAttached(yes))){	//block is not attached - we can switch the plan to another one
+			+focusOnTask(NewName, NewXrel, NewYrel, DispType);
+		}
+		else{													//we have a block attached, but the current topmost task is of another type - then, wait for another task.
+			.print("Waiting for another task of attached block type to become available");
+			request(w);			//for skipping without blocking up human time
+		};
+	}.
++!checkIfTaskStillAvailable: true <- .print("Something went wrong when checking for tasks - the code should never arrive here").
+
 
 +!findTask(Dtype) : task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,Dtype)) <-
 	-focusOnTask(_,_,_,_);
