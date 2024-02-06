@@ -48,15 +48,18 @@ currentState(exploring).
 
 //if agent is travelling to goal and reached goal.
 +actionID(Xactionid): currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-			//TODO: Currently all agents are focusing on the same task, so after one agent has submitted the rest of them will fail
+	.print("I am at goal, will attempt to submit now");
 	!submitOrRotate.		//agent is now in position for submission.
 
 //this should be invoked just after agent has submitted a task - go back to finding a new dispenser (or whatever we set the task allocation algorithm to).
+/*
 +actionID(Xactionid): currentState(travellingToGoal) & goal(0, 0) & not(blockAttached(yes)) <-
+	.print("Just submitted a task");
 	-goTo(_,_);
 	-currentState(travellingToGoal);
 	+currentState(deliberating);
-	!findDispenser.
-
+	!findDispenser;
+*/
 
 //if there is a block next to the agent, pick it up
 +actionID(Xactionid): currentState(pickingUpBlock) & focusOnTask(_,_,_,DType) & (thing(0,1,block,BType) | thing(0,-1,block,BType) | thing(1,0,block,BType) | thing(-1,0,block,BType)) <-
@@ -122,9 +125,18 @@ currentState(exploring).
 
 +!submitOrRotate: focusOnTask(Name, Xrel, Yrel, _) <-
 	if(thing(Xrel,Yrel, block, _)){
-	submit(Name);
+		.print("Just submitted a task");
+		-closestDispenser(_);		//cleaning up variables that were used for this task.
+		-nearestGoal(_);			//nearest goal will probably stay the same, but still doesn't hurt to clean up.
+		-focusOnTask(Name,_,_,_);
+		-blockAttached(yes);
+		-goTo(_,_);
+		-currentState(travellingToGoal);
+		+currentState(deliberating);
+		!findDispenser;				//find next task to do.
+		submit(Name);
 	}else{
-	!rotation(X,Y, Xrel, Yrel);
+		!rotation(X,Y, Xrel, Yrel);
 	}.
 
 
@@ -242,12 +254,11 @@ currentState(exploring).
 	+currentState(travellingToGoal);
 	!findGoal.	
 //if deliberating and there is an appropriate 1-block task, take it and go to the nearest dispenser
-+!findDispenser: currentState(deliberating) &task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) <-
++!findDispenser: currentState(deliberating) &task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) & not(blockAttached(yes)) <-
 	+focusOnTask(Name,Xrel,Yrel,DispType);					//This agent is now focusing on the task at hand
 	findNearestDispenser(DispType).						//adds belief nearestDispenser(Xnew,Ynew), which triggers function below
 
 					
-
 +nearestDispenser(Xn,Yn) :true <-
 	-currentState(deliberating);
 	if(Xn = -1 & Yn = -1){				//error code - no dispensers of this type found - continue exploring
