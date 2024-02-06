@@ -129,6 +129,8 @@ currentState(exploring).
 	-nextMove(Dir);
 	if(not(X = Xg) & not(Y = Yg)){
 		getNextMovePath;
+
+
 	};
 	if(X = Xg & Y = Yg){	//reached goal, get rid of the goal
 		-goTo(Xg, Yg);		//Note: the goal should be get rid of with other functions anyway
@@ -143,7 +145,8 @@ currentState(exploring).
 	getNextMovePath.					//add percept nextMove(X), which activates function below
 	
 +nextMove(Dir) : currentPosition(X,Y) <-
-	!moveAndUpdate(Dir, X, Y).
+	!moveAndUpdate(Dir, X, Y).	//move to the next position in the path.
+	
 	
 
 +!move_random : .random(RandomNumber) & random_dir([n,s,e,w],RandomNumber,Dir) & currentPosition(X,Y)
@@ -160,6 +163,9 @@ currentState(exploring).
 //plan to use for moving, which includes positional updates.
 @moveAndUpdate[atomic]
 +!moveAndUpdate(Dir, X, Y): true <-
+	move(Dir);!updatePosition(Dir); -previousPosition(_,_); +previousPosition(X,Y).
+
++!moveAndUpdate2: nextMove(Dir) & currentPosition(X,Y) <-
 	move(Dir);!updatePosition(Dir); -previousPosition(_,_); +previousPosition(X,Y).
 
 // update position after submitting the "move" action.
@@ -184,19 +190,19 @@ currentState(exploring).
 +lastActionResult(failed_forbidden) : currentPosition(X,Y) & lastAction(move) & lastActionParams([Dir]) <-
 	if(Dir = n){ 
 	+boundary(Y-1, s);
-	addBoundary(Y-1, horizontal)
+	addBoundary(Y-1, horizontal);
 	};  
 	if(Dir = s){ 
 	+boundary(Y+1, n);
-	addBoundary(Y+1, horizontal)
+	addBoundary(Y+1, horizontal);
 	};
 	if(Dir = e){ 
 	+boundary(X+1, w);
-	addBoundary(X+1, vertical)
+	addBoundary(X+1, vertical);
 	};
 	if(Dir = w){ 
 	+boundary(X-1, e);
-	addBoundary(X-1, vertical)
+	addBoundary(X-1, vertical);
 	};
 
     .print("Boundary added to prevent moving out of bounds.").
@@ -246,30 +252,4 @@ currentState(exploring).
 	.findall(obstacle(A,B),obstacle(A,B), Obstacles);
 	.findall(goal(A,B),goal(A,B), Goals);
 	report(Things, Obstacles, Goals,X,Y).				//internal action - see syntax in EISAdapter.java, under ExecuteAction()
-
-// Possible evasion
-+thing(0,1,entity,_): nextMove(s) & currentPosition(X,Y)
-	<- 
-	-nextMove(_); 
-	+nextMove(w);
-	!moveAndUpdate(Dir, X, Y);
-	!intentionalMove.
-+thing(0,-1,entity,_): nextMove(n) & currentPosition(X,Y)
-	<- 
-	-nextMove(_); 
-	+nextMove(e);
-	!moveAndUpdate(Dir, X, Y);
-	!intentionalMove.
-+thing(1,0,entity,_): nextMove(w) & currentPosition(X,Y)
-	<- 
-	-nextMove(_); 
-	+nextMove(s);
-	!moveAndUpdate(Dir, X, Y);
-	!intentionalMove.
-+thing(-1,0,entity,_): nextMove(e) & currentPosition(X,Y)
-	<- 
-	-nextMove(_); 
-	+nextMove(n);
-	!moveAndUpdate(Dir, X, Y);
-	!intentionalMove.
 

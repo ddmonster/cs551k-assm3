@@ -162,11 +162,11 @@ public class EISAdapter extends Environment implements AgentListener {
             return true;
         }
         
-        if (action.getFunctor().equals("addBoundry")) {
+        if (action.getFunctor().equals("addBoundary")) {
             try{
                 int x = (int) ((NumberTerm) action.getTerm(0)).solve();
                 String y = action.getTerm(1).toString();
-                agents.get(agName).addBoundry(x, y);
+                agents.get(agName).addBoundary(x, y);
             }
             catch(Exception e){
                 e.printStackTrace();
