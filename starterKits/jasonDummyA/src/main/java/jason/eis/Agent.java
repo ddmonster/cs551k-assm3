@@ -206,4 +206,16 @@ public class Agent {
             }
     }
 
+    public void addBoundry(int position, String orientation){
+        if(orientation.equals("horizontal")){
+            for (int i = 0; i < MAP_WIDTH*2; i++){
+                map[i][position] = "obstacle";
+            }
+        }
+        else if(orientation.equals("vertical")){
+            for (int i = 0; i < MAP_HEIGHT*2; i++){
+                map[position][i] = "obstacle";
+            }
+        }
+    }
 }

@@ -181,12 +181,24 @@ currentState(exploring).
 		-currentPosition(_,_); +currentPosition(X,Y);
 	}.
 
-@addBoundary[atomic]
 +lastActionResult(failed_forbidden) : currentPosition(X,Y) & lastAction(move) & lastActionParams([Dir]) <-
-	if(Dir = n){ +boundary(Y-1, s)};  
-	if(Dir = s){ +boundary(Y+1, n)};
-	if(Dir = e){ +boundary(X+1, w)};
-	if(Dir = w){ +boundary(X-1, e)};
+	if(Dir = n){ 
+	+boundary(Y-1, s);
+	addBoundary(Y-1, horizontal)
+	};  
+	if(Dir = s){ 
+	+boundary(Y+1, n);
+	addBoundary(Y+1, horizontal)
+	};
+	if(Dir = e){ 
+	+boundary(X+1, w);
+	addBoundary(X+1, vertical)
+	};
+	if(Dir = w){ 
+	+boundary(X-1, e);
+	addBoundary(X-1, vertical)
+	};
+
     .print("Boundary added to prevent moving out of bounds.").
 	
 

@@ -161,6 +161,18 @@ public class EISAdapter extends Environment implements AgentListener {
             }
             return true;
         }
+        
+        if (action.getFunctor().equals("addBoundry")) {
+            try{
+                int x = (int) ((NumberTerm) action.getTerm(0)).solve();
+                String y = action.getTerm(1).toString();
+                agents.get(agName).addBoundry(x, y);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+            return true;
+        }
         //function to add percept nearestDispenser(X,Y)
         if(action.getFunctor().equals("findNearestDispenser")){
             try{
