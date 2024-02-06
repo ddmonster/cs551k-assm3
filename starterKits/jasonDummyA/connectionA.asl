@@ -36,18 +36,22 @@ currentState(exploring).
 		-currentState(exploring);		
 		+currentState(deliberating);
 		!findDispenser;											//find the closest dispenser and do something about it
-		
 	}.
 
 
 
+//if submission fails find another task with same block
+//+actionID(Xactionid): focusOnTask(Name,_,_, DType)  &  not(task(Name,_,_,_)) <-
+//	!findTask(DType);
+//	!submitOrRotate.
+	
+
 //if agent is travelling to goal and reached goal.
-+actionID(Xactionid): currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-
-							//TODO: Currently all agents are focusing on the same task, so after one agent has submitted the rest of them will fail
++actionID(Xactionid): currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-			//TODO: Currently all agents are focusing on the same task, so after one agent has submitted the rest of them will fail
 	!submitOrRotate.		//agent is now in position for submission.
 
 //this should be invoked just after agent has submitted a task - go back to finding a new dispenser (or whatever we set the task allocation algorithm to).
-+actionID(Xactionid): currentState(travellingToGoal) & blockAttached(yes) & goal(0, 0) & not(blockAttached(yes)) <-
++actionID(Xactionid): currentState(travellingToGoal) & goal(0, 0) & not(blockAttached(yes)) <-
 	-goTo(_,_);
 	-currentState(travellingToGoal);
 	+currentState(deliberating);
@@ -118,13 +122,12 @@ currentState(exploring).
 
 //--------------------------ADD ME--------------------------------
 
-+!submitOrRotate: focusOnTask(Name, Xrel, Yrel, _) <- 
++!submitOrRotate: focusOnTask(Name, Xrel, Yrel, _) <-
 	if(thing(Xrel,Yrel, block, _)){
 	submit(Name);
 	}else{
-	!rotation(X,Y, Xrel, Yrel);
-	}
-	!submitOrRotate.
+	!rotation(X,Y, Xrel, Yrel)
+	}.
 
 //----------------------------------------------------------------
 
@@ -284,3 +287,7 @@ currentState(exploring).
 	}elif(X < GoalX & Y > GoalY){	//rotate counterclockwise
 		rotate(ccw);
 	}.
+
++!findTask(Dtype) : task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,Dtype)) <-
+	-focusOnTask(_,_,_,_);
+	+focusOnTask(Name,Xrel,Yrel,Dtype).
