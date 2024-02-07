@@ -41,6 +41,8 @@ public class EISAdapter extends Environment implements AgentListener {
     public EISAdapter() {
         super(20);
         agents = new HashMap<>();
+        //lockedTasks = new HashMap<>();
+        //tasks = new HashMap<>();
     }
 
     @Override

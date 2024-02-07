@@ -113,7 +113,11 @@ public class Agent {
     }
 
     public void updateMapTile(int x, int y, String tileType) {
-        map[x][y] = tileType;
+        //update the map tile only when it isn't an obstacle. Only matters for boundaries
+        if(map[x][y] != "obstacle"){
+            map[x][y] = tileType;
+        }
+
     }
 
     public ArrayList<Integer> findClosestDispenserOfType(String dispenserType){ //either "bo" or "b1"
