@@ -171,6 +171,7 @@ currentState(exploring).
 	getNextMovePath.					//add percept nextMove(X), which activates function below
 	
 +nextMove(Dir) : currentPosition(X,Y) <-
+	//check if there are any immediate entities around the agent...
 	if(thing(0,1,entity,_) & Dir = s){
 		!moveAndUpdate(w, X, Y); -nextMove(_);
 	}elif(thing(0,-1,entity,_) & Dir = n){
@@ -180,9 +181,22 @@ currentState(exploring).
 	}elif(thing(-1,0,entity,_) & Dir = w){
 		!moveAndUpdate(n, X, Y); -nextMove(_);
 	}else{
-	!moveAndUpdate(Dir, X, Y)}.	//move to the next position in the path.
-	
-	//
+	//however, we might have been unable to move because of the block being in a wrong position, unable to be transported.
+	if(lastAction(move) & lastActionResult(failed_path) & lastActionParams(DirP) & .nth(0, DirP, Dir) & attached(Xa, Ya)){
+		if(Dir = n){
+			!rotation(Xa, Ya, 0, 1);
+		}elif(Dir = e){
+			!rotation(Xa, Ya, -1,0);
+		}elif(Dir = s){
+			!rotation(Xa, Ya, 0, -1);
+		}else{
+			!rotation(Xa, Ya, 1, 0);
+		};
+	}
+	else{			//otherwise all is good.
+		!moveAndUpdate(Dir, X, Y)};	//move to the next position in the path.
+	}.
+
 
 +!move_random : .random(RandomNumber) & random_dir([n,s,e,w],RandomNumber,Dir) & currentPosition(X,Y)
 <-	
@@ -289,22 +303,38 @@ currentState(exploring).
 	report(Things, Obstacles, Goals,X,Y).				//internal action - see syntax in EISAdapter.java, under ExecuteAction()
 
 +!rotation(X,Y, GoalX, GoalY): true <-
-	if(X = GoalX & Y < GoalY){	//rotate clockwise
+	if(X = GoalX & Y < GoalY){	//rotate clockwise (shouldn't matter)
+		if(lastAction(rotate) & not(lastActionResult(success))){	//spin the other way (if on edge of the map, or failed for whatever other reason)
+			rotate(ccw);
+		}else{
+			rotate(cw);
+		};
+	}elif(X = GoalX & Y > GoalY){	//rotate counterclockwise (shouldn't matter)
+		if(lastAction(rotate) & not(lastActionResult(success))){
+			rotate(cw);
+		}else{
+			rotate(ccw);
+		};
+	}elif(X < GoalX & Y = GoalY){	//rotate clockwise	(shouldn't matter)
+		if(lastAction(rotate) & not(lastActionResult(success))){
+			rotate(ccw);
+		}else{
+			rotate(cw);
+		};
+	}elif(X > GoalX & Y = GoalY){	//rotate counterclockwise	(shouldn't matter)
+		if(lastAction(rotate) & not(lastActionResult(success))){
+			rotate(cw);
+		}else{
+			rotate(ccw);
+		};
+	}elif(X < GoalX & Y < GoalY){	//rotate counterclockwise - fastest
+		rotate(ccw);
+	}elif(X > GoalX & Y > GoalY){	//rotate counterclockwise - fastest
+		rotate(ccw);
+	}elif(X > GoalX & Y < GoalY){	//rotate clockwise - fastest
 		rotate(cw);
-	}elif(X = GoalX & Y > GoalY){	//rotate counterclockwise
-		rotate(ccw);
-	}elif(X < GoalX & Y = GoalY){	//rotate clockwise
+	}elif(X < GoalX & Y > GoalY){	//rotate clockwise - fastest
 		rotate(cw);
-	}elif(X > GoalX & Y = GoalY){	//rotate counterclockwise
-		rotate(ccw);
-	}elif(X < GoalX & Y < GoalY){	//rotate counterclockwise
-		rotate(ccw);
-	}elif(X > GoalX & Y > GoalY){	//rotate counterclockwise
-		rotate(ccw);
-	}elif(X > GoalX & Y < GoalY){	//rotate clockwise
-		rotate(cw);
-	}elif(X < GoalX & Y > GoalY){	//rotate counterclockwise
-		rotate(ccw);
 	}.
 
 //remove tasks that the deadline for which is already passed.	//TODO this is terrible, the env adds the beliefs back anyway even if expired
