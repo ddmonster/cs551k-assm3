@@ -73,7 +73,8 @@ currentState(exploring).
 //if there is a block next to the agent, pick it up
 +!makeAction: currentState(pickingUpBlock) & focusOnTask(_,_,_,DType) & (thing(0,1,block,BType) | thing(0,-1,block,BType) | thing(1,0,block,BType) | thing(-1,0,block,BType)) <-
 	.print("Block next to me.");
-	if(thing(0,1,dispenser,DType)){	//request blocks
+	if(thing(0,1,dispenser,DType)){	//request blocks	//I was thinking of giving way to other agents from other teams, but then if both teams are attached to a block, that's
+														//both agents messed up, so the overall score is not influenced
 		attach(s);
 	};
 	if(thing(0,-1,dispenser,DType)){	
@@ -111,6 +112,13 @@ currentState(exploring).
 	-goTo(_,_);
 	+currentState(pickingUpBlock).
 
+//Action above, if two agents of the same team request a block from the same dispenser, one of them will get a "success" and the rest "failure"
+//the one that was successful can feel free to take the block and leave; the blocked one - wait for the dispenser to be clear and 
++lastActionResult(failed_blocked):lastAction(request) & currentPosition(X,Y) <-
+	-currentState(pickingUpBlock);
+	+goTo(X,Y);
+	+currentState(travellingToDisp).
+
 //Any other plan to move somewhere (right now includes moving to goal unimpeded).
 +!makeAction : goTo(_,_) <- 
 	.print("Moving according to plan");
@@ -137,7 +145,7 @@ currentState(exploring).
 		.print("Attempting to submit a task...");
 		submit(Name);
 
-	}else{
+	}elif(attached(X,Y)){
 		!rotation(X,Y, Xrel, Yrel);
 	}.
 
@@ -216,12 +224,12 @@ currentState(exploring).
 
 +lastActionResult(failed_forbidden) : currentPosition(X,Y) & lastAction(move) & lastActionParams([Dir]) <-
 	if(Dir = n){ 
-	+boundary(Y-1, s);
-	addBoundary(Y-1, horizontal);
+	+boundary(Y, s);
+	addBoundary(Y, horizontal);	//this one is Y instead of Y-1, as in case our agent goes to a goal at the bottom fo the map he will be unable to rotate block appropriately
 	};  
 	if(Dir = s){ 
 	+boundary(Y+1, n);
-	addBoundary(Y+1, horizontal);
+	addBoundary(Y+1, horizontal);			
 	};
 	if(Dir = e){ 
 	+boundary(X+1, w);
@@ -285,12 +293,12 @@ currentState(exploring).
 		rotate(cw);
 	}elif(X = GoalX & Y > GoalY){	//rotate counterclockwise
 		rotate(ccw);
-	}elif(X < GoalX & Y = GoalY){	//rotate counterclockwise
+	}elif(X < GoalX & Y = GoalY){	//rotate clockwise
+		rotate(cw);
+	}elif(X > GoalX & Y = GoalY){	//rotate counterclockwise
 		rotate(ccw);
-	}elif(X > GoalX & Y = GoalY){	//rotate clockwise
-		rotate(cw);
-	}elif(X < GoalX & Y < GoalY){	//rotate clockwise
-		rotate(cw);
+	}elif(X < GoalX & Y < GoalY){	//rotate counterclockwise
+		rotate(ccw);
 	}elif(X > GoalX & Y > GoalY){	//rotate counterclockwise
 		rotate(ccw);
 	}elif(X > GoalX & Y < GoalY){	//rotate clockwise
