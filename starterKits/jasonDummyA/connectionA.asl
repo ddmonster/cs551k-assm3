@@ -238,19 +238,19 @@ currentState(exploring).
 
 +lastActionResult(failed_forbidden) : currentPosition(X,Y) & lastAction(move) & lastActionParams([Dir]) <-
 	if(Dir = n){ 
-	+boundary(Y, s);
+	+boundary(Y, n);
 	addBoundary(Y, horizontal);	//this one is Y instead of Y-1, as in case our agent goes to a goal at the bottom fo the map he will be unable to rotate block appropriately
 	};  
 	if(Dir = s){ 
-	+boundary(Y+1, n);
+	+boundary(Y+1, s);
 	addBoundary(Y+1, horizontal);			
 	};
 	if(Dir = e){ 
-	+boundary(X+1, w);
+	+boundary(X+1, e);
 	addBoundary(X+1, vertical);
 	};
 	if(Dir = w){ 
-	+boundary(X-1, e);
+	+boundary(X-1, w);
 	addBoundary(X-1, vertical);
 	};
 
