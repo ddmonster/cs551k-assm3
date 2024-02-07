@@ -182,7 +182,7 @@ currentState(exploring).
 	}else{
 	!moveAndUpdate(Dir, X, Y)}.	//move to the next position in the path.
 	
-	
+	//
 
 +!move_random : .random(RandomNumber) & random_dir([n,s,e,w],RandomNumber,Dir) & currentPosition(X,Y)
 <-	
