@@ -50,12 +50,10 @@ currentState(exploring).
 		!findDispenser;											//find the closest dispenser and do something about it
 	}.
 
-
-
 //if submission fails find another task with same block
-//+actionID(Xactionid): focusOnTask(Name,_,_, DType)  &  not(task(Name,_,_,_)) <-
-//	!findTask(DType);
-//	!submitOrRotate.
++actionID(Xactionid): lastAction(submit) & lastActionResult(failed_target) & focusOnTask(Name,_,_,DType) <- 
+	!findTask(DType);
+	submitOrRotate.
 	
 
 //if agent is travelling to goal and reached goal.
@@ -166,13 +164,13 @@ currentState(exploring).
 	getNextMovePath.					//add percept nextMove(X), which activates function below
 	
 +nextMove(Dir) : currentPosition(X,Y) <-
-	if(thing(0,2,entity,_) & Dir = s){
+	if(thing(0,1,entity,_) & Dir = s){
 		!moveAndUpdate(w, X, Y); -nextMove(_);
-	}elif(thing(0,-2,entity,_) & Dir = n){
+	}elif(thing(0,-1,entity,_) & Dir = n){
 		!moveAndUpdate(w, X, Y); -nextMove(_);
-	}elif(thing(2,0,entity,_) & Dir = e){
+	}elif(thing(1,0,entity,_) & Dir = e){
 		!moveAndUpdate(w, X, Y); -nextMove(_);
-	}elif(thing(-2,0,entity,_) & Dir = w){
+	}elif(thing(-1,0,entity,_) & Dir = w){
 		!moveAndUpdate(w, X, Y); -nextMove(_);
 	}else{
 	!moveAndUpdate(Dir, X, Y)}.	//move to the next position in the path.
@@ -336,6 +334,14 @@ currentState(exploring).
 +!checkIfTaskStillAvailable: true <- true.			//no task that's being focused on right now
 
 //Currently unused
-+!findTask(Dtype) : task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,Dtype)) <-
-	-focusOnTask(_,_,_,_);
-	+focusOnTask(Name,Xrel,Yrel,Dtype).
++!findTask(Dtype) : task(Name,Deadline,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,Dtype)) & step(Step) <-
+	-focusOnTask(Name2,_,_,_);
+		if (Name = Name2){
+			-task(Name,Deadline,10, ReqList);
+			!findTask(Dtype);
+		}elif (Deadline <= Step){
+			-task(Name,Deadline,10, ReqList);
+			!findTask(Dtype);
+		}else{
+			+focusOnTask(Name,Xrel,Yrel,Dtype);
+		}.
