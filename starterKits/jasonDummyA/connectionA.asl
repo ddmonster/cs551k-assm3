@@ -22,12 +22,13 @@ currentState(exploring).
 
 +!start : true <- 
 	//.print("hello massim world.").
-	true.
+	!move_random.
 
 
 
 @step[atomic]	//atomic because currentPosition(X,Y) can confuse the agent as step(X) and actionID(X) can have interleaved execution
 +step(Xstep) : true <-
+	.print("Received step percept.");
 	if(lastAction(submit) & not(lastActionResult(failed_target))){
 		.print("Submit Successful!");
 		-closestDispenser(_);		//cleaning up variables that were used for this task.
@@ -39,7 +40,6 @@ currentState(exploring).
 		+currentState(deliberating);
 		!findDispenser;				//find next task to do.
 	}
-	.print("Received step percept.");
 	!revertPositionIfUnsuccessful;								//check if last move was successful	
 	!reportBeliefs;												//update the internal maps with percepts
 	!removeTasksWithPassedDeadline;								//remove the tasks the deadline of which is passed already
@@ -50,21 +50,26 @@ currentState(exploring).
 		!findDispenser;											//find the closest dispenser and do something about it
 	}.
 
+//activate !makeAction after percepts have been updated
++actionID(Xactionid): true <-
+	.wait({+step(Xstep)});
+	!makeAction.
+
 //if submission fails find another task with same block
-+actionID(Xactionid): lastAction(submit) & lastActionResult(failed_target) & focusOnTask(Name,_,_,DType) <- 
++!makeAction: lastAction(submit) & lastActionResult(failed_target) & focusOnTask(Name,_,_,DType) <- 
 	!findTask(DType);
 	submitOrRotate.
 	
 
 //if agent is travelling to goal and reached goal.
-+actionID(Xactionid): currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-			//TODO: Currently all agents are focusing on the same task, so after one agent has submitted the rest of them will fail
++!makeAction: currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-			//TODO: Currently all agents are focusing on the same task, so after one agent has submitted the rest of them will fail
 	!checkIfTaskStillAvailable;							     	//Check if the task that the agent is focusing on is still available - if not, change to another task 
 	.print("I am at goal, will attempt to submit now");
 	!submitOrRotate.		//agent is now in position for submission.
 
 
 //if there is a block next to the agent, pick it up
-+actionID(Xactionid): currentState(pickingUpBlock) & focusOnTask(_,_,_,DType) & (thing(0,1,block,BType) | thing(0,-1,block,BType) | thing(1,0,block,BType) | thing(-1,0,block,BType)) <-
++!makeAction: currentState(pickingUpBlock) & focusOnTask(_,_,_,DType) & (thing(0,1,block,BType) | thing(0,-1,block,BType) | thing(1,0,block,BType) | thing(-1,0,block,BType)) <-
 	.print("Block next to me.");
 	if(thing(0,1,dispenser,DType)){	//request blocks
 		attach(s);
@@ -86,7 +91,7 @@ currentState(exploring).
 	
 
 //Move towards the dispenser & see if you land next to a dispenser
-+actionID(Xactionid) : not(blockAttached(yes)) & goTo(_,_) & focusOnTask(_,_,_,DType) & (thing(0,1,dispenser,DType) | thing(0,-1,dispenser,DType) | thing(1,0,dispenser,DType) | thing(-1,0,dispenser,DType))<- 
++!makeAction : not(blockAttached(yes)) & goTo(_,_) & focusOnTask(_,_,_,DType) & (thing(0,1,dispenser,DType) | thing(0,-1,dispenser,DType) | thing(1,0,dispenser,DType) | thing(-1,0,dispenser,DType))<- 
 	.print("Dispenser next to me.");
 	if(thing(0,1,dispenser,DType)){	//request blocks
 		request(s);
@@ -105,22 +110,22 @@ currentState(exploring).
 	+currentState(pickingUpBlock).
 
 //Any other plan to move somewhere (right now includes moving to goal unimpeded).
-+actionID(Xactionid) : goTo(_,_) <- 
++!makeAction : goTo(_,_) <- 
 	.print("Moving according to plan");
 	!intentionalMove.
 
 //If we're still exploring, TODO EXPLORATION PLAN.
-+actionID(Xactionid) : currentState(exploring) <- 
++!makeAction : currentState(exploring) <- 
 	.print("Exploring");
 	!move_random.
 
 //for testing
-+actionID(Xactionid) : currentState(chilling) <- 
++!makeAction : currentState(chilling) <- 
 	.print("Skipping my action");
 	!skip.
 
 //	Otherwise, move randomly.
-+actionID(Xactionid) : true <- 
++!makeAction : true <- 
 	.print("Moving randomly");
 	!move_random.
 
