@@ -73,9 +73,16 @@ currentState(exploring).
 //if there is a block next to the agent, pick it up
 +!makeAction: currentState(pickingUpBlock) & focusOnTask(_,_,_,DType) & (thing(0,1,block,BType) | thing(0,-1,block,BType) | thing(1,0,block,BType) | thing(-1,0,block,BType)) <-
 	.print("Block next to me.");
-	if(thing(0,1,dispenser,DType)){	//request blocks	//I was thinking of giving way to other agents from other teams, but then if both teams are attached to a block, that's
-														//both agents messed up, so the overall score is not influenced
-		attach(s);
+	if(lastActionResult(failed_blocked) & lastAction(request)){
+		//If two agents of the same team request a block from the same dispenser, one of them will get a "success" and the rest "failure"
+		//the one that was successful can feel free to take the block and leave; the blocked one - wait for the dispenser to be clear and go again
+		-currentState(pickingUpBlock);
+		+goTo(X,Y);
+		+currentState(travellingToDisp);
+		!makeAction;
+	}else{
+	if(thing(0,1,dispenser,DType)){		//I was thinking of giving way to other agents from other teams, but then if both teams are attached to a block, that's
+		attach(s);						//both agents messed up, so the overall score is not influenced	
 	};
 	if(thing(0,-1,dispenser,DType)){	
 		attach(n);
@@ -90,7 +97,8 @@ currentState(exploring).
 	-currentState(pickingUpBlock);
 	+currentState(travellingToGoal);
 	-nearestDispenser(_,_);				//don't care where nearest dispenser is - after completing a goal there can be another one
-	!findGoal.							//call a plan that finds the closest goal.
+	!findGoal;							//call a plan that finds the closest goal.
+	}.									
 	
 
 //Move towards the dispenser & see if you land next to a dispenser
@@ -111,13 +119,6 @@ currentState(exploring).
 	-currentState(travellingToDisp);
 	-goTo(_,_);
 	+currentState(pickingUpBlock).
-
-//Action above, if two agents of the same team request a block from the same dispenser, one of them will get a "success" and the rest "failure"
-//the one that was successful can feel free to take the block and leave; the blocked one - wait for the dispenser to be clear and 
-+lastActionResult(failed_blocked):lastAction(request) & currentPosition(X,Y) <-
-	-currentState(pickingUpBlock);
-	+goTo(X,Y);
-	+currentState(travellingToDisp).
 
 //Any other plan to move somewhere (right now includes moving to goal unimpeded).
 +!makeAction : goTo(_,_) <- 
@@ -281,6 +282,11 @@ currentState(exploring).
 +!findDispenser: currentState(deliberating) &task(Name,_,10, ReqList) & req1FromTask(ReqList, req(Xrel,Yrel,DispType)) &.random(N) & randomDispType([b0,b1], N, DispType) <-
 	+focusOnTask(Name,Xrel,Yrel,DispType);					//This agent is now focusing on the task at hand
 	findNearestDispenser(DispType).						//adds belief nearestDispenser(Xnew,Ynew), which triggers function below
+
+//There is a possibility, albeit narrow, that there are no appropriate tasks of the kind. In that case, just continue exploration.
++!findDispenser: currentState(deliberating) <-
+	-currentState(deliberating);
+	+currentState(exploring).
 
 					
 +nearestDispenser(Xn,Yn) :true <-
