@@ -29,17 +29,6 @@ currentState(exploring).
 @step[atomic]	//atomic because currentPosition(X,Y) can confuse the agent as step(X) and actionID(X) can have interleaved execution
 +step(Xstep) : true <-
 	.print("Received step percept.");
-	if(lastAction(submit) & not(lastActionResult(failed_target))){
-		.print("Submit Successful!");
-		-closestDispenser(_);		//cleaning up variables that were used for this task.
-		-nearestGoal(_);			//nearest goal will probably stay the same, but still doesn't hurt to clean up.
-		-focusOnTask(Name,_,_,_);
-		-blockAttached(yes);
-		-goTo(_,_);
-		-currentState(travellingToGoal);
-		+currentState(deliberating);
-		!findDispenser;				//find next task to do.
-	}
 	!revertPositionIfUnsuccessful;								//check if last move was successful	
 	!reportBeliefs;												//update the internal maps with percepts
 	!removeTasksWithPassedDeadline;								//remove the tasks the deadline of which is passed already
@@ -50,19 +39,32 @@ currentState(exploring).
 		!findDispenser;											//find the closest dispenser and do something about it
 	}.
 
+
 //activate !makeAction after percepts have been updated
 +actionID(Xactionid): true <-
 	.wait({+step(Xstep)});
+	if(lastAction(submit) & not(lastActionResult(failed_target))){
+		.print("Submit Successful!");
+		-closestDispenser(_);		//cleaning up variables that were used for this task.
+		-nearestGoal(_);			//nearest goal will probably stay the same, but still doesn't hurt to clean up.
+		-focusOnTask(Name,_,_,_);
+		-blockAttached(yes);
+		-goTo(_,_);
+		-currentState(travellingToGoal);
+		+currentState(deliberating);
+		!findDispenser;				//find next task to do.
+	};
 	!makeAction.
 
 //if submission fails find another task with same block
+/*
 +!makeAction: lastAction(submit) & lastActionResult(failed_target) & focusOnTask(Name,_,_,DType) <- 
 	!findTask(DType);
 	submitOrRotate.
-	
+	*/
 
 //if agent is travelling to goal and reached goal.
-+!makeAction: currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-			//TODO: Currently all agents are focusing on the same task, so after one agent has submitted the rest of them will fail
++!makeAction: currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-			
 	!checkIfTaskStillAvailable;							     	//Check if the task that the agent is focusing on is still available - if not, change to another task 
 	.print("I am at goal, will attempt to submit now");
 	!submitOrRotate.		//agent is now in position for submission.
@@ -133,14 +135,6 @@ currentState(exploring).
 +!submitOrRotate: focusOnTask(Name, Xrel, Yrel, _) <-
 	if(thing(Xrel,Yrel, block, _)){
 		.print("Attempting to submit a task...");
-		-closestDispenser(_);		//cleaning up variables that were used for this task.
-		-nearestGoal(_);			//nearest goal will probably stay the same, but still doesn't hurt to clean up.
-		-focusOnTask(Name,_,_,_);
-		-blockAttached(yes);
-		-goTo(_,_);
-		-currentState(travellingToGoal);
-		+currentState(deliberating);
-		!findDispenser;				//find next task to do.
 		submit(Name);
 
 	}else{
@@ -172,11 +166,11 @@ currentState(exploring).
 	if(thing(0,1,entity,_) & Dir = s){
 		!moveAndUpdate(w, X, Y); -nextMove(_);
 	}elif(thing(0,-1,entity,_) & Dir = n){
-		!moveAndUpdate(w, X, Y); -nextMove(_);
+		!moveAndUpdate(e, X, Y); -nextMove(_);
 	}elif(thing(1,0,entity,_) & Dir = e){
-		!moveAndUpdate(w, X, Y); -nextMove(_);
+		!moveAndUpdate(s, X, Y); -nextMove(_);
 	}elif(thing(-1,0,entity,_) & Dir = w){
-		!moveAndUpdate(w, X, Y); -nextMove(_);
+		!moveAndUpdate(n, X, Y); -nextMove(_);
 	}else{
 	!moveAndUpdate(Dir, X, Y)}.	//move to the next position in the path.
 	
@@ -270,6 +264,7 @@ currentState(exploring).
 +nearestDispenser(Xn,Yn) :true <-
 	-currentState(deliberating);
 	if(Xn = -1 & Yn = -1){				//error code - no dispensers of this type found - continue exploring
+		-focusOnTask(_,_,_,_);
 		+currentState(exploring);	
 	};
 	if(not(Xn = -1) & not(Yn = -1)){
@@ -290,10 +285,10 @@ currentState(exploring).
 		rotate(cw);
 	}elif(X = GoalX & Y > GoalY){	//rotate counterclockwise
 		rotate(ccw);
-	}elif(X < GoalX & Y = GoalY){	//rotate clockwise
-		rotate(cw);
-	}elif(X > GoalX & Y = GoalY){	//rotate counterclockwise
+	}elif(X < GoalX & Y = GoalY){	//rotate counterclockwise
 		rotate(ccw);
+	}elif(X > GoalX & Y = GoalY){	//rotate clockwise
+		rotate(cw);
 	}elif(X < GoalX & Y < GoalY){	//rotate clockwise
 		rotate(cw);
 	}elif(X > GoalX & Y > GoalY){	//rotate counterclockwise
@@ -318,7 +313,8 @@ currentState(exploring).
 	
 @checkIfTaskStillAvailable[atomic] 		//atomic so that the update happens before next plan is called. Agent needs to know the name of task for submission - task still exists, all good
 +!checkIfTaskStillAvailable: focusOnTask(Name, Xrel, Yrel, Dtype) & task(Name,_,10, ReqList) & req1FromTask(ReqList, req(NewXrel,NewYrel,DispType)) <-
-	true.
+	.print("I think I still have the task").	//task with the Name is still available - submit
+
 //no match found between focusOnTask() and task()
 +!checkIfTaskStillAvailable: focusOnTask(Name, Xrel, Yrel, Dtype) & task(NewName,_,10, ReqList) & req1FromTask(ReqList, req(NewXrel,NewYrel,DispType)) <-
 	if(Name = NewName){}	//all ok, task still available within deadline - it shouldn't be possible here though
@@ -326,14 +322,14 @@ currentState(exploring).
 		.print("Task no longer available. Will attempt to change.");
 		-focusOnTask(Name,_,_,_);
 		if(Dtype = DispType){	//new task found has the same type of block - we are happy
-			+focusOnTask(NewName, NewXrel, NewYrel, Dtype);
-		}elif(task(SameType,_,10, ReqList2) & req1FromTask(ReqList2, req(Xr2,Yr2,DType))){			//task is not topmost, but still exists - take it
+			+focusOnTask(NewName, NewXrel, NewYrel, DispType);
+		}elif(task(SameType,_,10, ReqList2) & req1FromTask(ReqList2, req(Xr2,Yr2,Dtype))){			//task is not topmost, but still exists - take it
 			+focusOnTask(SameType, Xr2, Yr2, Dtype);	
 		}elif(not(Dtype = DispType) & not(blockAttached(yes))){	//block is not attached - we can switch the plan to another one
 			+focusOnTask(NewName, NewXrel, NewYrel, DispType);
 		}else{													//we have a block attached, but the current topmost task is of another type - then, wait for another task.
 			.print("Waiting for another task of attached block type to become available");
-			request(w);			//for skipping without blocking up human time
+			+focusOnTask(Name, Xrel, Yrel, Dtype);				//"technological debt" - agent will attempt to submit a task that is already gone (which is ok)
 		};
 	}.print("Finished amending tasks").
 +!checkIfTaskStillAvailable: true <- true.			//no task that's being focused on right now
