@@ -130,6 +130,14 @@ currentState(exploring).
 +!submitOrRotate: focusOnTask(Name, Xrel, Yrel, _) <-
 	if(thing(Xrel,Yrel, block, _)){
 		.print("Attempting to submit a task...");
+		-closestDispenser(_);		//cleaning up variables that were used for this task.
+		-nearestGoal(_);			//nearest goal will probably stay the same, but still doesn't hurt to clean up.
+		-focusOnTask(Name,_,_,_);
+		-blockAttached(yes);
+		-goTo(_,_);
+		-currentState(travellingToGoal);
+		+currentState(deliberating);
+		!findDispenser;				//find next task to do.
 		submit(Name);
 
 	}else{
