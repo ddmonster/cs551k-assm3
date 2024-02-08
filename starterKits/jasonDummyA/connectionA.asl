@@ -132,7 +132,7 @@ currentState(exploring).
 +!makeAction : currentState(exploring) & currentPosition(X,Y) <- 
 	.print("Exploring");
 	!setExplorationDirection;
-	if(exporationDirection(Dir)){
+	if(explorationDirection(Dir)){
 		!moveAndUpdate(Dir, X, Y);
 	}else{
 		!move_random;
@@ -246,27 +246,27 @@ currentState(exploring).
 
 +lastActionResult(failed_forbidden) : currentPosition(X,Y) & lastAction(move) & lastActionParams([Dir]) <-
 	if(Dir = n){ 
-	+boundary(Y, n);
-	!flipEplorationDirection;
-	addBoundary(Y, horizontal);	//this one is Y instead of Y-1, as in case our agent goes to a goal at the bottom fo the map he will be unable to rotate block appropriately
+	+boundary(Y-1, n);
+	!flipExplorationDirection;
+	addBoundary(Y-1, horizontal);	
 	!moveAndUpdate(s, X, Y);
 	};  
 	if(Dir = s){ 
 	+boundary(Y, s);
-	!flipEplorationDirection;
-	addBoundary(Y, horizontal);
+	!flipExplorationDirection;
+	addBoundary(Y, horizontal);	//this one is Y instead of Y+1, as in case our agent goes to a goal at the bottom fo the map he will be unable to rotate block appropriately
 	!moveAndUpdate(n, X, Y);
 	};
 	if(Dir = e){ 
-	+boundary(X, e);
-	!flipEplorationDirection;
-	addBoundary(X, vertical);
+	+boundary(X+1, e);
+	!flipExplorationDirection;
+	addBoundary(X+1, vertical);
 	!moveAndUpdate(w, X, Y);
 	};
 	if(Dir = w){ 
-	+boundary(X, w);
-	!flipEplorationDirection;
-	addBoundary(X, vertical);
+	+boundary(X-1, w);
+	!flipExplorationDirection;
+	addBoundary(X-1, vertical);
 	!moveAndUpdate(e, X, Y);
 	};
 
@@ -406,51 +406,55 @@ currentState(exploring).
 			+focusOnTask(Name,Xrel,Yrel,Dtype);
 		}.
 
-+!setExplorationDirection: exporationDirection(Dir) & currentPosition(X,Y) <-
+@setExplorationDirection[atomic] 	//to make sure the exploration direction is set before next line of code is called
++!setExplorationDirection: explorationDirection(Dir) & currentPosition(X,Y) <-
 	//check if the direction is sill valid
-	if(Dir = n & thing(X,Y-1,obstacle,_)){
-		-exporationDirection(_);
+	if(Dir = n &  (boundary(Y-1, n) |  thing(X,Y-1,obstacle,_))){
+		-explorationDirection(_);
 		!setExplorationDirection;
-	}elif(Dir = s & thing(X,Y+1,obstacle,_)){
-		-exporationDirection(_);
+	}elif(Dir = s & (boundary(Y+1, s) | thing(X,Y+1,obstacle,_))){
+		-explorationDirection(_);
 		!setExplorationDirection;
-	}elif(Dir = e & thing(X+1,Y,obstacle,_)){
-		-exporationDirection(_);
+	}elif(Dir = e & (boundary(X+1, e) | thing(X+1,Y,obstacle,_))){
+		-explorationDirection(_);
 		!setExplorationDirection;
-	}elif(Dir = w & thing(X-1,Y,obstacle,_)){
-		-exporationDirection(_);
+	}elif(Dir = w & (boundary(X-1, w) | thing(X-1,Y,obstacle,_))){
+		-explorationDirection(_);
 		!setExplorationDirection;
 	}.
-
 
 +!setExplorationDirection: .random(N) & random_dir([n,s,e,w],N,Dir) & currentPosition(X,Y) <-
 
-	-exporationDirection(_);
+	-explorationDirection(_);
 
 	if(Dir = n & not (boundary(Y-1, n)) & not (thing(X,Y-1,obstacle,_))) {
-		+exporationDirection(n);
+		+explorationDirection(n);
 	}elif(Dir = s & not (boundary(Y+1, s)) & not (thing(X,Y+1,obstacle,_))) {
-		+exporationDirection(s);
+		+explorationDirection(s);
 	}elif(Dir = e & not (boundary(X+1, e)) & not (thing(X+1,Y,obstacle,_))) {
-		+exporationDirection(e);
+		+explorationDirection(e);
 	}elif(Dir = w & not (boundary(X-1, w)) & not (thing(X-1,Y,obstacle,_))) {
-		+exporationDirection(w);
-	}.
+		+explorationDirection(w);
+	}
+	else{
+		!setExplorationDirection; 		//try again if the random was wrong.
+	}
+	.
 
-+!flipEplorationDirection: exporationDirection(Dir) <-
++!flipExplorationDirection: explorationDirection(Dir) <-
 	if(Dir = n){
-		-exporationDirection(_);
-		+exporationDirection(e);
+		-explorationDirection(_);
+		+explorationDirection(e);
 	};
 	if(Dir = s){
-		-exporationDirection(_);
-		+exporationDirection(w);
+		-explorationDirection(_);
+		+explorationDirection(w);
 	};
 	if(Dir = e){
-		-exporationDirection(_);
-		+exporationDirection(s);
+		-explorationDirection(_);
+		+explorationDirection(s);
 	};
 	if(Dir = w){
-		-exporationDirection(_);
-		+exporationDirection(n);
+		-explorationDirection(_);
+		+explorationDirection(n);
 	}.
