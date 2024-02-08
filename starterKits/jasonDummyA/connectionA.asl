@@ -128,8 +128,12 @@ currentState(exploring).
 //If we're still exploring, TODO EXPLORATION PLAN.
 +!makeAction : currentState(exploring) <- 
 	.print("Exploring");
-	!move_random.
-
+	!setExplorationDirection;
+	if(exporationDirection(Dir)){
+		!moveAndUpdate(Dir, X, Y);
+	}else{
+		!move_random;
+	}.
 //for testing
 +!makeAction : currentState(chilling) <- 
 	.print("Skipping my action");
@@ -240,19 +244,23 @@ currentState(exploring).
 +lastActionResult(failed_forbidden) : currentPosition(X,Y) & lastAction(move) & lastActionParams([Dir]) <-
 	if(Dir = n){ 
 	+boundary(Y, n);
+	!flipEplorationDirection;
 	addBoundary(Y, horizontal);	//this one is Y instead of Y-1, as in case our agent goes to a goal at the bottom fo the map he will be unable to rotate block appropriately
 	};  
 	if(Dir = s){ 
-	+boundary(Y+1, s);
-	addBoundary(Y+1, horizontal);			
+	+boundary(Y, s);
+	!flipEplorationDirection;
+	addBoundary(Y, horizontal);			
 	};
 	if(Dir = e){ 
-	+boundary(X+1, e);
-	addBoundary(X+1, vertical);
+	+boundary(X, e);
+	!flipEplorationDirection;
+	addBoundary(X, vertical);
 	};
 	if(Dir = w){ 
-	+boundary(X-1, w);
-	addBoundary(X-1, vertical);
+	+boundary(X, w);
+	!flipEplorationDirection;
+	addBoundary(X, vertical);
 	};
 
     .print("Boundary added to prevent moving out of bounds.").
@@ -390,3 +398,54 @@ currentState(exploring).
 		}else{
 			+focusOnTask(Name,Xrel,Yrel,Dtype);
 		}.
+
++!setExplorationDirection: exporationDirection(Dir) & currentPosition(X,Y) <-
+	//check if the direction is sill valid
+	if(Dir = n & thing(X,Y-1,obstacle,_)){
+		-exporationDirection(_);
+		!setExplorationDirection;
+	}elif(Dir = s & thing(X,Y+1,obstacle,_)){
+		-exporationDirection(_);
+		!setExplorationDirection;
+	}elif(Dir = e & thing(X+1,Y,obstacle,_)){
+		-exporationDirection(_);
+		!setExplorationDirection;
+	}elif(Dir = w & thing(X-1,Y,obstacle,_)){
+		-exporationDirection(_);
+		!setExplorationDirection;
+	}.
+
+
++!setExplorationDirection: .random(N) & random_dir([n,s,e,w],N,Dir) & currentPosition(X,Y) <-
+
+	-exporationDirection(_);
+
+	if(Dir = n & not (boundary(Y-1, n)) & not (thing(X,Y-1,obstacle,_))) {
+		+exporationDirection(n);
+	}elif(Dir = s & not (boundary(Y+1, s)) & not (thing(X,Y+1,obstacle,_))) {
+		+exporationDirection(s);
+	}elif(Dir = e & not (boundary(X+1, e)) & not (thing(X+1,Y,obstacle,_))) {
+		+exporationDirection(e);
+	}elif(Dir = w & not (boundary(X-1, w)) & not (thing(X-1,Y,obstacle,_))) {
+		+exporationDirection(w);
+	}else{
+		!setExplorationDirection;
+	}.
+
++!flipEplorationDirection: exporationDirection(Dir) <-
+	if(Dir = n){
+		-exporationDirection(_);
+		+exporationDirection(s);
+	};
+	if(Dir = s){
+		-exporationDirection(_);
+		+exporationDirection(n);
+	};
+	if(Dir = e){
+		-exporationDirection(_);
+		+exporationDirection(w);
+	};
+	if(Dir = w){
+		-exporationDirection(_);
+		+exporationDirection(e);
+	}.
