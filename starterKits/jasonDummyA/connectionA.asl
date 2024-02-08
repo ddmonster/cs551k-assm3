@@ -11,6 +11,7 @@ req2FromTask(ReqList,req(X,Y,DispType)) :- .nth(1, ReqList, req(X,Y,DispType)).
 currentPosition(64,64).
 previousPosition(64,64).
 currentState(exploring).
+
 /* Initial goals */
 
 !start.
@@ -62,6 +63,8 @@ currentState(exploring).
 	!findTask(DType);
 	submitOrRotate.
 	*/
++!makeAction: nextMove(none) <- 
+	!findGoal.
 
 //if agent is travelling to goal and reached goal.
 +!makeAction: currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-			
@@ -126,7 +129,7 @@ currentState(exploring).
 	!intentionalMove.
 
 //If we're still exploring, TODO EXPLORATION PLAN.
-+!makeAction : currentState(exploring) <- 
++!makeAction : currentState(exploring) & currentPosition(X,Y) <- 
 	.print("Exploring");
 	!setExplorationDirection;
 	if(exporationDirection(Dir)){
@@ -246,21 +249,25 @@ currentState(exploring).
 	+boundary(Y, n);
 	!flipEplorationDirection;
 	addBoundary(Y, horizontal);	//this one is Y instead of Y-1, as in case our agent goes to a goal at the bottom fo the map he will be unable to rotate block appropriately
+	!moveAndUpdate(s, X, Y);
 	};  
 	if(Dir = s){ 
 	+boundary(Y, s);
 	!flipEplorationDirection;
-	addBoundary(Y, horizontal);			
+	addBoundary(Y, horizontal);
+	!moveAndUpdate(n, X, Y);
 	};
 	if(Dir = e){ 
 	+boundary(X, e);
 	!flipEplorationDirection;
 	addBoundary(X, vertical);
+	!moveAndUpdate(w, X, Y);
 	};
 	if(Dir = w){ 
 	+boundary(X, w);
 	!flipEplorationDirection;
 	addBoundary(X, vertical);
+	!moveAndUpdate(e, X, Y);
 	};
 
     .print("Boundary added to prevent moving out of bounds.").
@@ -355,7 +362,7 @@ currentState(exploring).
 @removeTasksWithPassedDeadline[atomic]
 +!removeTasksWithPassedDeadline: step(X) <-
 	for(task(Name,Deadline,_,_)){
-		if(Deadline < X){
+		if(Deadline < X + 2){
 			//.print("Task with a deadline removed!");
 			-task(Name,Deadline,_,_);
 		};
@@ -428,24 +435,22 @@ currentState(exploring).
 		+exporationDirection(e);
 	}elif(Dir = w & not (boundary(X-1, w)) & not (thing(X-1,Y,obstacle,_))) {
 		+exporationDirection(w);
-	}else{
-		!setExplorationDirection;
 	}.
 
 +!flipEplorationDirection: exporationDirection(Dir) <-
 	if(Dir = n){
 		-exporationDirection(_);
-		+exporationDirection(s);
+		+exporationDirection(e);
 	};
 	if(Dir = s){
 		-exporationDirection(_);
-		+exporationDirection(n);
+		+exporationDirection(w);
 	};
 	if(Dir = e){
 		-exporationDirection(_);
-		+exporationDirection(w);
+		+exporationDirection(s);
 	};
 	if(Dir = w){
 		-exporationDirection(_);
-		+exporationDirection(e);
+		+exporationDirection(n);
 	}.
