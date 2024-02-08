@@ -38,9 +38,11 @@ public class PerceptHandler {
         for (Literal next : percepts) {
             if (next.getFunctor().equals("thing")) {
                 List<Term> params = next.getTerms();
-                
+
             }
         }
+        return percepts;
     }
+    
 
 }
