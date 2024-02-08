@@ -67,11 +67,15 @@ currentState(exploring).
 	!findGoal.
 
 //if agent is travelling to goal and reached goal.
-+!makeAction: currentState(travellingToGoal) & blockAttached(yes) & goal(0,0)  <-			
++!makeAction: currentState(travellingToGoal) & blockAttached(yes) & goal(0,0) &currentPosition(X,Y) <-
+	if(obstacle(0,1) | boundary(Y+1,s)){
+		!moveAndUpdate(n, X, Y);
+	}	
+	else{
 	!checkIfTaskStillAvailable;							     	//Check if the task that the agent is focusing on is still available - if not, change to another task 
 	.print("I am at goal, will attempt to submit now");
-	!submitOrRotate.		//agent is now in position for submission.
-
+	!submitOrRotate;		//agent is now in position for submission.
+	}.
 
 //if there is a block next to the agent, pick it up
 +!makeAction: currentState(pickingUpBlock) & focusOnTask(_,_,_,DType) & (thing(0,1,block,BType) | thing(0,-1,block,BType) | thing(1,0,block,BType) | thing(-1,0,block,BType)) <-
@@ -128,11 +132,23 @@ currentState(exploring).
 	.print("Moving according to plan");
 	!intentionalMove.
 
-//If we're still exploring, TODO EXPLORATION PLAN.
+//If we're still exploring.
 +!makeAction : currentState(exploring) & currentPosition(X,Y) <- 
 	.print("Exploring");
 	!setExplorationDirection;
-	if(explorationDirection(Dir)){
+	//however, we might have been unable to move because of the block being in a wrong position, unable to be transported.
+	if(lastAction(move) & lastActionResult(failed_path) & lastActionParams(DirP) & .nth(0, DirP, Dir) & attached(Xa, Ya)){
+		if(Dir = n){
+			!rotation(Xa, Ya, 0, 1);
+		}elif(Dir = e){
+			!rotation(Xa, Ya, -1,0);
+		}elif(Dir = s){
+			!rotation(Xa, Ya, 0, -1);
+		}else{
+			!rotation(Xa, Ya, 1, 0);
+		};
+	}
+	elif(explorationDirection(Dir)){
 		!moveAndUpdate(Dir, X, Y);
 	}else{
 		!move_random;

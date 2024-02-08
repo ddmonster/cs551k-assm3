@@ -151,7 +151,7 @@ public class Agent {
             int yGoal = (int) data.get(1);
             //heuristic same as in Pathfinding.java class
             thisDistance = Math.abs(this.position[0] - xGoal) + Math.abs(this.position[1] - yGoal);
-            if (thisDistance < currentShortestDistance){
+            if (thisDistance < currentShortestDistance && map[xGoal][yGoal] != "obstacle"){
                 xToReturn = xGoal;
                 yToReturn = yGoal;
             }
