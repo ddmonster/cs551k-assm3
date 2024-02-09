@@ -56,7 +56,7 @@ public class EISAdapter extends Environment implements AgentListener {
 
         for(String e: ei.getEntities()) {
             System.out.println("Register agent " + e);
-            handler.put(e,new PerceptHandler());
+            handler.put(e,new PerceptHandler(e));
             try {
                 ei.registerAgent(e);
             } catch (AgentException e1) {
@@ -113,7 +113,12 @@ public class EISAdapter extends Environment implements AgentListener {
             return false;
         }
 
+
         try {
+            if (action.getFunctor().equals("move")) {
+                handler.get(agName).setActionNum();
+                // logger.info(agName+ "handle move " + action.toString());
+            }
             ei.performAction(agName, literalToAction(action));
             return true;
         } catch (ActException e) {

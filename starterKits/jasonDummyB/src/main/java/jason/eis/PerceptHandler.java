@@ -74,10 +74,12 @@ class LocationList {
 public class PerceptHandler {
     public Integer X = 0;
     public Integer Y = 0;
-    private Integer actionNum = -1;
+    public Integer actionNum = -1;
+    public boolean getActResult = false;
     private Integer vision = null;
     public String step = "";
     public String prestep = "";
+    public String Name = "";
     private LocationList obstacleList = new LocationList();
     private List<Literal> blockList = new ArrayList<Literal>();
     private LocationList dispenser0List = new LocationList();
@@ -85,6 +87,15 @@ public class PerceptHandler {
     private LocationList goalsList = new LocationList();
     private List<Literal> tasks = new ArrayList<Literal>();
     private List<Literal> attach = new ArrayList<Literal>();
+
+    public void setActionNum() {
+        actionNum += 1;
+        getActResult = false;
+    }
+
+    PerceptHandler(String name) {
+        Name= name;
+    }
     static Set<String> match_obs_prop = new HashSet<String>( Arrays.asList(new String[] {
 		"name",
 		"steps",
@@ -110,7 +121,7 @@ public class PerceptHandler {
 //		"timestamp",
 //		"deadline",
 	}));
-    public synchronized Collection<Literal> handlePercepts(Collection<Literal> percepts) {
+    public  Collection<Literal> handlePercepts(Collection<Literal> percepts) {
         for (Literal next : percepts) {
             if (next.getFunctor().equals("thing")) {
                 Term x = next.getTerm(0);
@@ -127,15 +138,21 @@ public class PerceptHandler {
         }
         return percepts;
     }
-    
-    public Collection<Literal> updatePercepts(Collection<Literal> percepts) {
+
+    public  Collection<Literal> updatePercepts(Collection<Literal> percepts) {
         String lastAction			= "";
 		String lastActionResult 	= "";
 		String lastActionParams	    = "";
         List<Literal> goal = new ArrayList<>();
         List<Literal> dispenser = new ArrayList<>();
-        
+        LocationList attached = new LocationList();
+        LocationList cantgo =  new LocationList();
         for (Literal next : percepts) {
+            if (next.getFunctor().equals("obstacle") ) {
+                Integer x = Integer.valueOf(next.getTerm(0).toString());
+                Integer y = Integer.valueOf(next.getTerm(1).toString());
+                cantgo.add(x,y);
+            }
             if (next.getFunctor().equals("actionID")) {
                 prestep = next.getTerm(0).toString();
                 
@@ -152,17 +169,32 @@ public class PerceptHandler {
             if (next.getFunctor().equals("goal")) {
                 goal.add(next);
             }
+            if (next.getFunctor().equals("attached")) {
+                System.out.println(next.toString());
+            }
             if (next.getFunctor().equals("thing")) {
+                if (next.getTerm(2).toString().equals("entity")) {
+                    Integer x = Integer.valueOf(next.getTerm(0).toString());
+                    Integer y = Integer.valueOf(next.getTerm(1).toString());
+                    cantgo.add(x,y);
+                }
                 if (next.getTerm(2).toString().equals("dispenser")) {
                     dispenser.add(next);
                 }
             }
+            if (next.getFunctor().equals("attached")) {
+                Integer x = Integer.valueOf(next.getTerm(0).toString());
+                Integer y = Integer.valueOf(next.getTerm(1).toString());
+                attached.add(x,y);
+            }
             
 
         }
-        if (!step.equals(prestep) && !prestep.isEmpty()) {
-            step = prestep;
+        if (!getActResult) {
+            
+            // System.err.println("step n   nnnn "+ prestep + X.toString()+ "  " + Y.toString() + lastAction + lastActionResult);
             if (lastAction.equals("move") && lastActionResult.equals("success")) {
+                getActResult = true;
                 if (lastActionParams.contains("n")) {
                     Y++;
                 } else if (lastActionParams.contains("s")) {
@@ -172,46 +204,76 @@ public class PerceptHandler {
                 } else if (lastActionParams.contains("w")) {
                     X--;
                 }
+                
+                
             }
 
             for (Literal g : goal) {
                 Integer x = Integer.valueOf(g.getTerm(0).toString());
                 Integer y = Integer.valueOf(g.getTerm(1).toString());
-                if (!goalsList.contains(x + X, y + Y)) {
-                    goalsList.add(x+X, y+Y);
-                    
+                // System.out.println(Name + " goal X "+ x.toString() + "Y " + y.toString());
+                if (x == X && y == Y) {
+                    Literal l = ASSyntax.createLiteral("onGoalArea");
+                    percepts.add(l);
+                }
+                ;
+
+                if (!goalsList.contains(x + X, Y-y)) {
+                    goalsList.add(x+X,Y-y); 
                     
                 }
             }
             for (Literal d : dispenser) {
-                Integer x = Integer.valueOf(d.getTerm(0).toString()) ;
+                Integer x = Integer.valueOf(d.getTerm(0).toString());
                 Integer y = Integer.valueOf(d.getTerm(1).toString());
                 String name = d.getTerm(3).toString();
-                System.err.println("dispensor  "+ name) ;
+                Literal l = ASSyntax.createLiteral("nextToDispenser");
+                if (x == 0 && y ==1){
+                    l .addTerm(ASSyntax.createString("s"));
+                    
+                } else if (x == 0 && y == -1) {
+                    l .addTerm(ASSyntax.createString("n"));
+
+                } else if (x == 1 && y == 0) {
+                    l .addTerm(ASSyntax.createString("e"));
+                }else if (x == -1 && y == 0) {
+
+                    l.addTerm(ASSyntax.createString("w"));
+                }
+                // System.err.println("dispensor  "+ name) ;
                 if (name.contains("b0")) {
-                    if (!dispenser0List.contains(x + X, y + Y)) {
-                        dispenser0List.add(x + X, y + Y);
-                        System.err.println("dispensor22  "+ dispenser0List.toString()) ;
+                    l.addTerm(ASSyntax.createString("b0"));
+                    if (!dispenser0List.contains(x + X, Y - y)) {
+                        dispenser0List.add(x + X, Y -y);
                     }
                 }
                 if (name.contains("b1")) {
-                    if (!dispenser1List.contains(x+X, y+Y)) {
-                        dispenser1List.add(x + X, y + Y);
+                    l.addTerm(ASSyntax.createString("b1"));
+                    if (!dispenser1List.contains(x + X, Y - y)) {
+                        dispenser1List.add(x + X, Y - y);
                     }
                 }
+                percepts.add(l);
 
             }
+            HashSet<String> avaliable_dir = new HashSet<>();
+            avaliable_dir.add("n");
+            avaliable_dir.add("s");
+            avaliable_dir.add("w");
+            avaliable_dir.add("e");
+            for (List<Integer> l : cantgo.store) {
+                
+            }
+
+        goalsList.addNearestToPercept("nearestGoal", percepts, X, Y);
+        dispenser0List.addNearestToPercept("nearestDispenser0", percepts, X, Y);
+        dispenser1List.addNearestToPercept("nearestDispenser1", percepts, X, Y);
 
         }
         Literal l = ASSyntax.createLiteral("perceptLocation");
         l.addTerm(ASSyntax.createNumber(X));
         l.addTerm(ASSyntax.createNumber(Y));
         percepts.add(l);
-        
-
-        goalsList.addNearestToPercept("nearestGoal", percepts, X, Y);
-        dispenser0List.addNearestToPercept("nearestDispenser0", percepts, X, Y);
-        dispenser1List.addNearestToPercept("nearestDispenser1", percepts, X, Y);
 
         return percepts;
     }
