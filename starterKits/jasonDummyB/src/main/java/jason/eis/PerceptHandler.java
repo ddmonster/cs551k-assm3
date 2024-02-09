@@ -4,8 +4,6 @@ package jason.eis;
 import jason.JasonException;
 import jason.NoValueException;
 import jason.asSyntax.*;
-
-import jason.eis.Translator;
 import java.awt.Point;
 import java.io.File;
 import java.io.FileWriter;
@@ -64,11 +62,11 @@ class LocationList {
 
     public void addNearestToPercept(String Name, Collection<Literal> percepts, Integer X, Integer Y) {
         if (!isEmpty()) {
-        Literal l = ASSyntax.createLiteral(Name);
-        List<Integer> ngxy =  nearest(X, Y);
-        l.addTerm(ASSyntax.createNumber(ngxy.get(0)));
-        l.addTerm(ASSyntax.createNumber(ngxy.get(1)));
-        percepts.add(l);
+            Literal l = ASSyntax.createLiteral(Name);
+            List<Integer> ngxy =  nearest(X, Y);
+            l.addTerm(ASSyntax.createNumber(ngxy.get(0)));
+            l.addTerm(ASSyntax.createNumber(ngxy.get(1)));
+            percepts.add(l);
         }
 
     }
@@ -129,7 +127,7 @@ public class PerceptHandler {
         }
         return percepts;
     }
-
+    
     public Collection<Literal> updatePercepts(Collection<Literal> percepts) {
         String lastAction			= "";
 		String lastActionResult 	= "";
@@ -188,12 +186,15 @@ public class PerceptHandler {
             for (Literal d : dispenser) {
                 Integer x = Integer.valueOf(d.getTerm(0).toString()) ;
                 Integer y = Integer.valueOf(d.getTerm(1).toString());
-                if (d.getTerm(3).toString().equals("b0")) {
+                String name = d.getTerm(3).toString();
+                System.err.println("dispensor  "+ name) ;
+                if (name.contains("b0")) {
                     if (!dispenser0List.contains(x + X, y + Y)) {
                         dispenser0List.add(x + X, y + Y);
+                        System.err.println("dispensor22  "+ dispenser0List.toString()) ;
                     }
                 }
-                if (d.getTerm(3).toString().equals("b1")) {
+                if (name.contains("b1")) {
                     if (!dispenser1List.contains(x+X, y+Y)) {
                         dispenser1List.add(x + X, y + Y);
                     }
