@@ -142,6 +142,8 @@ public class Agent {
         result.add(yToReturn);
         return result;
     }
+    //TODO: cannot find the goal that is the smme as the current position - done
+    
     public ArrayList<Integer> findClosestGoal(){ //Same function as above
         int currentShortestDistance = 9999;         //inf
         int thisDistance, xToReturn = -1, yToReturn = -1;   //-1 - no goal found
@@ -149,9 +151,10 @@ public class Agent {
         for (List<Object> data : this.goalList) {      //run through entire list, update goal that is closest
             int xGoal = (int) data.get(0);
             int yGoal = (int) data.get(1);
-            //heuristic same as in Pathfinding.java class
-            thisDistance = Math.abs(this.position[0] - xGoal) + Math.abs(this.position[1] - yGoal);
-            if (thisDistance < currentShortestDistance && map[xGoal][yGoal] != "obstacle"){
+            // add random number to the heuristic to avoid the agent getting stuck in a loop
+            thisDistance = Math.abs(this.position[0] - xGoal) + Math.abs(this.position[1] - yGoal) + (int)(Math.random() * 10);
+
+            if (thisDistance < currentShortestDistance && map[xGoal][yGoal] != "obstacle" && (xGoal != this.position[0] || yGoal != this.position[1])){
                 xToReturn = xGoal;
                 yToReturn = yGoal;
             }

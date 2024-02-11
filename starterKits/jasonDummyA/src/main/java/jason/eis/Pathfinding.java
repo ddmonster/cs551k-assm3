@@ -4,6 +4,11 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.Random;
 
+// This class was partially created with use of external sourcs and tools such as LLM's. 
+// List of sources:
+// https://www.baeldung.com/java-a-star-pathfinding
+// https://codegym.cc/groups/posts/a-search-algorithm-in-java
+
 public class Pathfinding {
     private static int MAP_WIDTH = 128; 
     private static int MAP_HEIGHT = 128;
@@ -31,9 +36,19 @@ public class Pathfinding {
         }
     }
 
+    //TODO: add randomness to the heuristic function - done
+
     private static double heuristic(int x, int y, int destX, int destY) {
-        return Math.abs(x - destX) + Math.abs(y - destY);
-    }
+    double distance = Math.abs(destX - x) + Math.abs(destY - y);
+    double randomFactor = 0.1;
+
+    // Introduce randomness to prevent agents from choosing the same path
+    Random random = new Random();
+    double randomAdjustment = random.nextDouble() * randomFactor * 2 - randomFactor; 
+    distance += randomAdjustment;
+
+    return distance;
+}
 
     public static ArrayList<String> findBestRoute(String[][] map, int startX, int startY, int destX, int destY) {
         // Modify the comparator to introduce randomness in case of equal f values

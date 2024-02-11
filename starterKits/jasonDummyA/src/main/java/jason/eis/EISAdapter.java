@@ -1,7 +1,6 @@
 package jason.eis;
 
 import jason.eis.Pathfinding;
-import jason.eis.PathfindingTest;
 
 
 import jason.eis.Agent;
